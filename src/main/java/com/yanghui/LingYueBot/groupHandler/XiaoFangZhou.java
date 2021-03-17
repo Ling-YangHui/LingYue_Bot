@@ -46,7 +46,8 @@ public class XiaoFangZhou extends GroupMessageHandler {
                             userObject.getIntValue("like"),
                             userObject.getBoolean("isSpecialUser"),
                             userObject.getBoolean("isAdministrator"),
-                            userObject.getIntValue("hasFuck")
+                            userObject.getIntValue("hasFuck"),
+                            userObject.getString("name")
                     ));
         }
     }
@@ -111,7 +112,11 @@ public class XiaoFangZhou extends GroupMessageHandler {
                     0,
                     false,
                     false,
-                    0));
+                    0,
+                    event.getSenderName()));
+        else if (!userArray.get(senderID).userName.equals(event.getSenderName())) {
+            userArray.get(senderID).userName = event.getSenderName();
+        }
         /* TODO：自动复读 */
         if ((boolean) configList.get("SuccessiveRepeat_Permission")) {
             boolean isRepeat = false;

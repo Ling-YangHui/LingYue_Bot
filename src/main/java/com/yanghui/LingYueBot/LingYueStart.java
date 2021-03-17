@@ -28,7 +28,14 @@ public class LingYueStart extends JavaPlugin {
     public void onEnable() {
         /* TODO: 处理群消息 */
         Listener<?> listener = GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, event -> {
-            handlerHashMap.get(event.getGroup().getId()).onHandleMessage(event);
+            synchronized (handlerHashMap.get(event.getGroup().getId())) {
+                handlerHashMap.get(event.getGroup().getId()).onHandleMessage(event);
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         });
     }
 
