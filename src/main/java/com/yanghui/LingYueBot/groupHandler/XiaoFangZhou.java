@@ -1,16 +1,14 @@
 package com.yanghui.LingYueBot.groupHandler;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.yanghui.LingYueBot.core.FunctionHandler;
 import com.yanghui.LingYueBot.core.GroupMessageHandler;
 import com.yanghui.LingYueBot.core.JsonLoader;
+import com.yanghui.LingYueBot.core.UserDataHandler;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -18,9 +16,10 @@ public class XiaoFangZhou extends GroupMessageHandler {
 
     private final HashMap<String, Object> paramList = new HashMap<>();
     private final HashMap<String, Object> configList = new HashMap<>();
+    private final HashMap<Long, UserDataHandler> userArray = new HashMap<>();
     JSONArray repeatArray;
     JSONArray specialResponseArray;
-    JSONArray specialUserArray;
+    String rootPath = "D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiCore\\plugins\\LingYue_resources\\";
 
     public XiaoFangZhou() {
         paramList.put("SuccessiveRepeat", false);
@@ -31,21 +30,24 @@ public class XiaoFangZhou extends GroupMessageHandler {
     }
 
     @Override
-    public void onCreate() {
-        InputStream jsonStream;
-        InputStreamReader inputStreamReader;
-        StringBuilder fileContent;
-        char[] buffer = new char[1024];
-        try {
-            /* TODO：json读取 */
-            // 读取自动复读
-            repeatArray = JsonLoader.jsonArrayLoader("XiaoFangZhou/repeatList.json", this);
-            // 读取特殊语句回复
-            specialResponseArray = JsonLoader.jsonArrayLoader("XiaoFangZhou/specialRepeatList.json", this);
-            // 读取特殊用户
-            specialUserArray = JsonLoader.jsonArrayLoader("XiaoFangZhou/specialUser.json", this);
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void onCreate() throws Exception {
+        /* TODO：json读取 */
+        // 读取自动复读
+        repeatArray = JsonLoader.jsonArrayLoader(rootPath + "XiaoFangZhou\\repeatList.json", this);
+        // 读取特殊语句回复
+        specialResponseArray = JsonLoader.jsonArrayLoader(rootPath + "XiaoFangZhou\\specialRepeatList.json", this);
+        // 读取用户信息
+        JSONArray likeArray = JsonLoader.jsonArrayLoader(rootPath + "XiaoFangZhou\\user.json", this);
+        for (int i = 0; i < likeArray.size(); i++) {
+            JSONObject userObject = likeArray.getJSONObject(i);
+            userArray.put(userObject.getLong("userID"),
+                    new UserDataHandler(
+                            userObject.getLong("userID"),
+                            userObject.getIntValue("like"),
+                            userObject.getBoolean("isSpecialUser"),
+                            userObject.getBoolean("isAdministrator"),
+                            userObject.getIntValue("hasFuck")
+                    ));
         }
     }
 
@@ -53,12 +55,22 @@ public class XiaoFangZhou extends GroupMessageHandler {
     public void onHandleMessage(GroupMessageEvent event) {
         String message = event.getMessage().contentToString();
         Group group = event.getGroup();
+        long senderID = event.getSender().getId();
         /* TODO：最高优先级——管理员任务 */
-        if (event.getSender().getId() == 2411046022L) {
+        if (senderID == 2411046022L) {
             switch (message) {
-                case "LingDong滚回去卷吧":
+                case "LingYue滚回去卷吧":
                     configList.put("OnActive", false);
                     group.sendMessage("呜~这就去卷");
+                    break;
+                case "LingYue -reload":
+                    try {
+                        onDelete();
+                        onCreate();
+                        group.sendMessage("LingYue的里面，已经被换成新的形状了呢~");
+                    } catch (Exception e) {
+                        group.sendMessage("呜~数据读取错误了呢");
+                    }
                     break;
                 case "LingYue -getStatus":
                     StringBuilder str = new StringBuilder();
@@ -75,12 +87,14 @@ public class XiaoFangZhou extends GroupMessageHandler {
                     break;
                 case "LingYue -close repeat":
                     configList.put("SuccessiveRepeat_Permission", false);
+                    group.sendMessage("呜呜呜，我再也不复读了");
                     break;
                 case "LingYue -open repeat":
                     configList.put("SuccessiveRepeat_Permission", true);
                     break;
                 case "LingYue -close special":
                     configList.put("SpecialMessageReply_Permission", false);
+                    group.sendMessage("呜呜呜，我再也不说怪话了");
                     break;
                 case "LingYue -open special":
                     configList.put("SpecialMessageReply_Permission", true);
@@ -90,6 +104,14 @@ public class XiaoFangZhou extends GroupMessageHandler {
         if (!(boolean) configList.get("OnActive"))
             return;
 
+        /* 数据列表存在性认证 */
+        if (userArray.get(senderID) == null)
+            userArray.put(senderID, new UserDataHandler(
+                    senderID,
+                    0,
+                    false,
+                    false,
+                    0));
         /* TODO：自动复读 */
         if ((boolean) configList.get("SuccessiveRepeat_Permission")) {
             boolean isRepeat = false;
@@ -150,6 +172,14 @@ public class XiaoFangZhou extends GroupMessageHandler {
                             String[] andMessage = containMessageStr.split("&");
                             for (String str : andMessage) {
                                 // 对于分割出的每一个地方进行检测，如果为假则立刻退出
+                                if (str.startsWith("$")) {
+                                    if (message.contains(str.substring(1))) {
+                                        System.out.println(str.substring(1));
+                                        trig = false;
+                                        break;
+                                    }
+                                    continue;
+                                }
                                 if (!(trig = message.contains(str))) {
                                     break;
                                 }
@@ -166,19 +196,46 @@ public class XiaoFangZhou extends GroupMessageHandler {
                     JSONArray replyArray = specialResponseObject.getJSONArray("reply");
                     JSONArray specialReplyArray = specialResponseObject.getJSONArray("specialReply");
                     // 判断是否为特殊用户
-                    for (int j = 0; j < specialUserArray.size(); j++) {
-                        if (event.getSender().getId() == specialUserArray.getLong(j)) {
-                            replyArray.addAll(specialReplyArray);
-                            break;
+                    boolean isSpecialUser = userArray.get(senderID).userIsSpecial;
+                    // 执行预定函数
+                    if (isSpecialUser) {
+                        JSONArray functionArray = specialResponseObject.getJSONArray("specialFunction");
+                        for (int j = 0; j < functionArray.size(); j++) {
+                            String function = functionArray.getString(j);
+                            FunctionHandler.groupUserFunction(function, userArray.get(senderID), event);
+                        }
+                    } else {
+                        JSONArray functionArray = specialResponseObject.getJSONArray("function");
+                        for (int j = 0; j < functionArray.size(); j++) {
+                            String function = functionArray.getString(j);
+                            FunctionHandler.groupUserFunction(function, userArray.get(senderID), event);
                         }
                     }
                     if (!specialResponseObject.getBoolean("randReply")) {
-                        int replyIndex = new Random().nextInt(replyArray.size());
-                        group.sendMessage(replyArray.getString(replyIndex));
-                    } else {
-                        if (new Random().nextBoolean()) {
+                        if (!isSpecialUser && replyArray.size() != 0) {
+                            // 获取一个索引
                             int replyIndex = new Random().nextInt(replyArray.size());
                             group.sendMessage(replyArray.getString(replyIndex));
+                        } else if (replyArray.size() + specialReplyArray.size() != 0) {
+                            // 获取一个索引，在两个Array之间切换
+                            int replyIndex = new Random().nextInt(replyArray.size() + specialReplyArray.size());
+                            if (replyIndex < replyArray.size())
+                                group.sendMessage(replyArray.getString(replyIndex));
+                            else
+                                group.sendMessage(specialReplyArray.getString(replyIndex - replyArray.size()));
+                        }
+                    } else {
+                        if (new Random().nextBoolean()) {
+                            if (!isSpecialUser && replyArray.size() != 0) {
+                                int replyIndex = new Random().nextInt(replyArray.size());
+                                group.sendMessage(replyArray.getString(replyIndex));
+                            } else if (replyArray.size() + specialReplyArray.size() != 0) {
+                                int replyIndex = new Random().nextInt(replyArray.size() + specialReplyArray.size());
+                                if (replyIndex < replyArray.size())
+                                    group.sendMessage(replyArray.getString(replyIndex));
+                                else
+                                    group.sendMessage(specialReplyArray.getString(replyIndex - replyArray.size()));
+                            }
                         }
                     }
                 }
@@ -189,7 +246,7 @@ public class XiaoFangZhou extends GroupMessageHandler {
     }
 
     @Override
-    public void onDelete() {
-
+    public void onDelete() throws Exception {
+        UserDataHandler.saveJsonFile(userArray, rootPath + "XiaoFangZhou\\user.json");
     }
 }

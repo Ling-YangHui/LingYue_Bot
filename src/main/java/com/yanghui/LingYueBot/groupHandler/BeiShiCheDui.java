@@ -6,7 +6,7 @@ import net.mamoe.mirai.event.events.GroupMessageEvent;
 public class BeiShiCheDui extends GroupMessageHandler {
 
     @Override
-    public void onCreate() {
+    public void onCreate() throws Exception{
 
     }
 
@@ -16,7 +16,7 @@ public class BeiShiCheDui extends GroupMessageHandler {
     }
 
     @Override
-    public void onDelete() {
+    public void onDelete() throws Exception{
 
     }
 }

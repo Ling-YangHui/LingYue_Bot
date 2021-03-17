@@ -39,7 +39,11 @@ public class LingYueStart extends JavaPlugin {
         handlerHashMap.put(717151707L, new XiaoFangZhou());
         handlerHashMap.put(1121098457L, new BeiShiCheDui());
         for (GroupMessageHandler handler : handlerHashMap.values()) {
-            handler.onCreate();
+            try {
+                handler.onCreate();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -47,7 +51,11 @@ public class LingYueStart extends JavaPlugin {
     public void onDisable() {
         /* TODO: 这里写退出以后的保存数据方法 */
         for (GroupMessageHandler handler : handlerHashMap.values()) {
-            handler.onDelete();
+            try {
+                handler.onDelete();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }
