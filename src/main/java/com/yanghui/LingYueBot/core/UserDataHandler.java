@@ -36,9 +36,24 @@ public class UserDataHandler {
             userObject.put("name", handler.userName);
             userJsonArray.add(userObject);
         }
-        Writer jsonWriter = new OutputStreamWriter(new FileOutputStream(path), StandardCharsets.UTF_8);
+        Writer jsonWriter = new OutputStreamWriter(new FileOutputStream(path + ".json"), StandardCharsets.UTF_8);
         jsonWriter.write(userJsonArray.toJSONString());
         jsonWriter.flush();
         jsonWriter.close();
+        // 开始校验文件是否合法写入
+        JSONArray array = JsonLoader.jsonArrayLoader(path + ".json", null);
+        if (!array.isEmpty()) {
+            FileInputStream inputStream = new FileInputStream(path + ".json");
+            FileOutputStream outputStream = new FileOutputStream(path);
+            byte[] buf = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buf)) !=-1){
+                outputStream.write(buf, 0, bytesRead);
+            }
+            inputStream.close();
+            outputStream.close();
+        } else {
+            throw new Exception();
+        }
     }
 }

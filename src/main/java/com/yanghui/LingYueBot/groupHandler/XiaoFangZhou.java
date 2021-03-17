@@ -6,56 +6,69 @@ import com.yanghui.LingYueBot.core.FunctionHandler;
 import com.yanghui.LingYueBot.core.GroupMessageHandler;
 import com.yanghui.LingYueBot.core.JsonLoader;
 import com.yanghui.LingYueBot.core.UserDataHandler;
+import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 
-import java.util.HashMap;
-import java.util.Random;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class XiaoFangZhou extends GroupMessageHandler {
 
     private final HashMap<String, Object> paramList = new HashMap<>();
     private final HashMap<String, Object> configList = new HashMap<>();
     private final HashMap<Long, UserDataHandler> userArray = new HashMap<>();
-    JSONArray repeatArray;
-    JSONArray specialResponseArray;
-    String rootPath = "D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiCore\\plugins\\LingYue_resources\\";
+    private final String rootPath = "D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiCore\\plugins\\LingYue_resources\\";
+    private JSONArray repeatArray;
+    private JSONArray specialResponseArray;
+    private JSONArray scheduleTaskArray;
+    private Group group = null;
+    private final long id;
+    private Timer scheduleTimer = null;
 
-    public XiaoFangZhou() {
+    public XiaoFangZhou(long id) {
         paramList.put("SuccessiveRepeat", false);
         paramList.put("LastMessage", "");
         configList.put("SuccessiveRepeat_Permission", true);
         configList.put("SpecialMessageReply_Permission", true);
         configList.put("OnActive", true);
+        this.id = id;
     }
 
     @Override
     public void onCreate() throws Exception {
-        /* TODO：json读取 */
-        // 读取自动复读
-        repeatArray = JsonLoader.jsonArrayLoader(rootPath + "XiaoFangZhou\\repeatList.json", this);
-        // 读取特殊语句回复
-        specialResponseArray = JsonLoader.jsonArrayLoader(rootPath + "XiaoFangZhou\\specialRepeatList.json", this);
-        // 读取用户信息
-        JSONArray likeArray = JsonLoader.jsonArrayLoader(rootPath + "XiaoFangZhou\\user.json", this);
-        for (int i = 0; i < likeArray.size(); i++) {
-            JSONObject userObject = likeArray.getJSONObject(i);
-            userArray.put(userObject.getLong("userID"),
-                    new UserDataHandler(
-                            userObject.getLong("userID"),
-                            userObject.getIntValue("like"),
-                            userObject.getBoolean("isSpecialUser"),
-                            userObject.getBoolean("isAdministrator"),
-                            userObject.getIntValue("hasFuck"),
-                            userObject.getString("name")
-                    ));
-        }
+        onLoad();
+        /* TODO：启动定时任务 */
+        // 获取当前系统日期
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+        scheduleTimer = new Timer();
+        scheduleTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                String nowTime = sdf.format(new Date());
+                System.out.println(nowTime);
+                for (int i = 0; i < scheduleTaskArray.size(); i++) {
+                    if (nowTime.equals(scheduleTaskArray.getJSONObject(i).getString("time"))) {
+                        if (group != null) {
+                            group.sendMessage(scheduleTaskArray.getJSONObject(i).getString("message"))
+                            ;
+                        } else {
+                            while (group == null) {
+                                try {
+                                    group = Bot.getInstance(3598326822L).getGroup(id);
+                                } catch (Exception ignore){}
+                            }
+                        }
+                    }
+                }
+            }
+        }, 10, 1000 * 30);
     }
 
     @Override
     public void onHandleMessage(GroupMessageEvent event) {
         String message = event.getMessage().contentToString();
-        Group group = event.getGroup();
+        group = event.getGroup();
         long senderID = event.getSender().getId();
         /* TODO：最高优先级——管理员任务 */
         if (senderID == 2411046022L) {
@@ -67,7 +80,7 @@ public class XiaoFangZhou extends GroupMessageHandler {
                 case "LingYue -reload":
                     try {
                         onDelete();
-                        onCreate();
+                        onLoad();
                         group.sendMessage("LingYue的里面，已经被换成新的形状了呢~");
                     } catch (Exception e) {
                         group.sendMessage("呜~数据读取错误了呢");
@@ -117,6 +130,10 @@ public class XiaoFangZhou extends GroupMessageHandler {
         else if (!userArray.get(senderID).userName.equals(event.getSenderName())) {
             userArray.get(senderID).userName = event.getSenderName();
         }
+
+        /* 列表数据修正 */
+        userArray.get(senderID).userIsSpecial = userArray.get(senderID).userLike > 200;
+
         /* TODO：自动复读 */
         if ((boolean) configList.get("SuccessiveRepeat_Permission")) {
             boolean isRepeat = false;
@@ -253,5 +270,29 @@ public class XiaoFangZhou extends GroupMessageHandler {
     @Override
     public void onDelete() throws Exception {
         UserDataHandler.saveJsonFile(userArray, rootPath + "XiaoFangZhou\\user.json");
+    }
+
+    public void onLoad() throws Exception {
+        /* TODO：json读取 */
+        // 读取自动复读
+        repeatArray = JsonLoader.jsonArrayLoader(rootPath + "XiaoFangZhou\\repeatList.json", this);
+        // 读取特殊语句回复
+        specialResponseArray = JsonLoader.jsonArrayLoader(rootPath + "XiaoFangZhou\\specialRepeatList.json", this);
+        // 读取用户信息
+        JSONArray userJsonArray = JsonLoader.jsonArrayLoader(rootPath + "XiaoFangZhou\\user.json", this);
+        for (int i = 0; i < userJsonArray.size(); i++) {
+            JSONObject userObject = userJsonArray.getJSONObject(i);
+            this.userArray.put(userObject.getLong("userID"),
+                    new UserDataHandler(
+                            userObject.getLong("userID"),
+                            userObject.getIntValue("like"),
+                            userObject.getBoolean("isSpecialUser"),
+                            userObject.getBoolean("isAdministrator"),
+                            userObject.getIntValue("hasFuck"),
+                            userObject.getString("name")
+                    ));
+        }
+        // 读取定时任务列表
+        scheduleTaskArray = JsonLoader.jsonArrayLoader(rootPath + "XiaoFangZhou\\scheduleTask.json", this);
     }
 }

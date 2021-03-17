@@ -43,7 +43,7 @@ public class LingYueStart extends JavaPlugin {
     public void onLoad(@NotNull PluginComponentStorage $this$onLoad) {
         /* TODO: 这里写不同群的初始化事件 */
         // 初始化事件handler
-        handlerHashMap.put(717151707L, new XiaoFangZhou());
+        handlerHashMap.put(717151707L, new XiaoFangZhou(717151707L));
         handlerHashMap.put(1121098457L, new BeiShiCheDui());
         for (GroupMessageHandler handler : handlerHashMap.values()) {
             try {
