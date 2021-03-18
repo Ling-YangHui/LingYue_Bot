@@ -3,11 +3,15 @@ package com.yanghui.LingYueBot;
 import com.yanghui.LingYueBot.core.GroupMessageHandler;
 import com.yanghui.LingYueBot.groupHandler.BeiShiCheDui;
 import com.yanghui.LingYueBot.groupHandler.XiaoFangZhou;
+import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.console.extension.PluginComponentStorage;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.Listener;
+import net.mamoe.mirai.event.ListeningStatus;
+import net.mamoe.mirai.event.events.BotOfflineEvent;
+import net.mamoe.mirai.event.events.BotOnlineEvent;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,13 +30,29 @@ public class LingYueStart extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        /* 监听登录事件 */
+        Listener<?> loginListener = GlobalEventChannel.INSTANCE.subscribe(BotOnlineEvent.class, botOnlineEvent -> {
+            for (long groupID : handlerHashMap.keySet()) {
+                (handlerHashMap.get(groupID).group = Bot.getInstance(3598326822L).getGroup(groupID)).sendMessage("----Bot已上线----");
+                System.out.println("成功加载群: " + groupID + " " + handlerHashMap.get(groupID).group.getName());
+            }
+            return ListeningStatus.STOPPED;
+        });
+
+        /* 监听下线事件 */
+        Listener<?> offlineListener = GlobalEventChannel.INSTANCE.subscribe(BotOfflineEvent.class, botOfflineEvent -> {
+            for (long groupID: handlerHashMap.keySet()) {
+                handlerHashMap.get(groupID).group.sendMessage("----Bot已下线----");
+            }
+            return ListeningStatus.STOPPED;
+        });
         /* TODO: 处理群消息 */
-        Listener<?> listener = GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, event -> {
-            synchronized (handlerHashMap.get(event.getGroup().getId())) {
-                handlerHashMap.get(event.getGroup().getId()).onHandleMessage(event);
+        Listener<?> messageListener = GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, groupMessageEvent -> {
+            synchronized (handlerHashMap.get(groupMessageEvent.getGroup().getId())) {
                 try {
+                handlerHashMap.get(groupMessageEvent.getGroup().getId()).onHandleMessage(groupMessageEvent);
                     Thread.sleep(100);
-                } catch (InterruptedException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -43,7 +63,7 @@ public class LingYueStart extends JavaPlugin {
     public void onLoad(@NotNull PluginComponentStorage $this$onLoad) {
         /* TODO: 这里写不同群的初始化事件 */
         // 初始化事件handler
-        handlerHashMap.put(717151707L, new XiaoFangZhou(717151707L));
+        handlerHashMap.put(717151707L, new XiaoFangZhou());
         handlerHashMap.put(1121098457L, new BeiShiCheDui());
         for (GroupMessageHandler handler : handlerHashMap.values()) {
             try {
@@ -63,6 +83,9 @@ public class LingYueStart extends JavaPlugin {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+        for (long groupID: handlerHashMap.keySet()) {
+            handlerHashMap.get(groupID).group.sendMessage("----Bot已下线----");
         }
     }
 }

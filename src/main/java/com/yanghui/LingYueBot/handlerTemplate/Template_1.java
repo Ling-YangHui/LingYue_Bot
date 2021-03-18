@@ -1,16 +1,21 @@
-package com.yanghui.LingYueBot.groupHandler;
+package com.yanghui.LingYueBot.handlerTemplate;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.yanghui.LingYueBot.core.*;
+import com.yanghui.LingYueBot.core.FunctionHandler;
+import com.yanghui.LingYueBot.core.GroupMessageHandler;
+import com.yanghui.LingYueBot.core.JsonLoader;
+import com.yanghui.LingYueBot.core.UserDataHandler;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.MessageChainBuilder;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class XiaoFangZhou extends GroupMessageHandler {
+/*
+* 这是基于XiaoFangZhou开发的一个模板，其中的UserDataHandler可以继承重写哦
+* */
+
+public abstract class Template_1 extends GroupMessageHandler {
 
     private final HashMap<String, Object> paramList = new HashMap<>();
     private final HashMap<String, Object> configList = new HashMap<>();
@@ -19,22 +24,56 @@ public class XiaoFangZhou extends GroupMessageHandler {
     private JSONArray repeatArray;
     private JSONArray specialResponseArray;
     private JSONArray scheduleTaskArray;
+    private Timer scheduleTimer = null;
+    private final String groupName;
 
-    public XiaoFangZhou() {
+    public Template_1(String groupName) {
         paramList.put("SuccessiveRepeat", false);
         paramList.put("LastMessage", "");
         configList.put("SuccessiveRepeat_Permission", true);
         configList.put("SpecialMessageReply_Permission", true);
         configList.put("OnActive", true);
+        this.groupName = groupName;
     }
 
     @Override
-    public void onCreate() throws Exception {
-        onLoad();
+    public abstract void onCreate() throws Exception;
+
+    @Override
+    public abstract void onHandleMessage(GroupMessageEvent event);
+
+    @Override
+    public abstract void onDelete() throws Exception;
+
+    public void onLoad() throws Exception {
+        /* TODO：json读取 */
+        // 读取自动复读
+        repeatArray = JsonLoader.jsonArrayLoader(rootPath + groupName + "\\repeatList.json", this);
+        // 读取特殊语句回复
+        specialResponseArray = JsonLoader.jsonArrayLoader(rootPath + groupName + "\\specialRepeatList.json", this);
+        // 读取用户信息
+        JSONArray userJsonArray = JsonLoader.jsonArrayLoader(rootPath + groupName + "\\user.json", this);
+        for (int i = 0; i < userJsonArray.size(); i++) {
+            JSONObject userObject = userJsonArray.getJSONObject(i);
+            this.userArray.put(userObject.getLong("userID"),
+                    new UserDataHandler(
+                            userObject.getLong("userID"),
+                            userObject.getIntValue("like"),
+                            userObject.getBoolean("isSpecialUser"),
+                            userObject.getBoolean("isAdministrator"),
+                            userObject.getIntValue("hasFuck"),
+                            userObject.getString("name")
+                    ));
+        }
+        // 读取定时任务列表
+        scheduleTaskArray = JsonLoader.jsonArrayLoader(rootPath + groupName + "\\scheduleTask.json", this);
+    }
+
+    private void startSchedule() {
         /* TODO：启动定时任务 */
         // 获取当前系统日期
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
-        Timer scheduleTimer = new Timer();
+        scheduleTimer = new Timer();
         scheduleTimer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -51,70 +90,8 @@ public class XiaoFangZhou extends GroupMessageHandler {
         }, 10, 1000 * 30);
     }
 
-    @Override
-    public void onHandleMessage(GroupMessageEvent event) {
-        MessageChain message = event.getMessage();
-        MessageChainBuilder response = new MessageChainBuilder(10);
-        String messageContent = event.getMessage().contentToString();
-        group = event.getGroup();
+    private void refreshUserArray(GroupMessageEvent event) {
         long senderID = event.getSender().getId();
-        /* TODO：最高优先级——管理员任务 */
-        if (senderID == 2411046022L) {
-            switch (messageContent) {
-                case "LingYue滚回去卷吧":
-                    configList.put("OnActive", false);
-                    group.sendMessage("呜~这就去卷");
-                    break;
-                case "LingYue -reload":
-                    try {
-                        onDelete();
-                        onLoad();
-                        group.sendMessage("LingYue的里面，已经被换成新的形状了呢~");
-                    } catch (Exception e) {
-                        group.sendMessage("呜~数据读取错误了呢");
-                    }
-                    break;
-                case "LingYue -traceBack":
-                    try {
-                        onLoad();
-                        group.sendMessage("咻~回溯完毕");
-                    } catch (Exception e) {
-                        group.sendMessage("呜~数据读取错误了呢");
-                    }
-                    break;
-                case "LingYue -getStatus":
-                    StringBuilder str = new StringBuilder();
-                    for (String key : configList.keySet()) {
-                        str.append(key).append(": ").append(configList.get(key)).append('\n');
-                    }
-                    group.sendMessage(str.toString());
-                    break;
-                case "LingYue -close":
-                    configList.put("OnActive", false);
-                    break;
-                case "LingYue -open":
-                    configList.put("OnActive", true);
-                    break;
-                case "LingYue -close repeat":
-                    configList.put("SuccessiveRepeat_Permission", false);
-                    group.sendMessage("呜呜呜，我再也不复读了");
-                    break;
-                case "LingYue -open repeat":
-                    configList.put("SuccessiveRepeat_Permission", true);
-                    break;
-                case "LingYue -close special":
-                    configList.put("SpecialMessageReply_Permission", false);
-                    group.sendMessage("呜呜呜，我再也不说怪话了");
-                    break;
-                case "LingYue -open special":
-                    configList.put("SpecialMessageReply_Permission", true);
-                    break;
-            }
-        }
-        if (!(boolean) configList.get("OnActive"))
-            return;
-
-        /* 数据列表存在性认证 */
         if (userArray.get(senderID) == null)
             userArray.put(senderID, new UserDataHandler(
                     senderID,
@@ -126,21 +103,21 @@ public class XiaoFangZhou extends GroupMessageHandler {
         else if (!userArray.get(senderID).userName.equals(event.getSenderName())) {
             userArray.get(senderID).userName = event.getSenderName();
         }
+    }
 
-        /* 列表数据修正 */
-        userArray.get(senderID).userIsSpecial = userArray.get(senderID).userLike > 200;
-
+    private void autoRepeat(GroupMessageEvent event) {
+        String message = event.getMessage().contentToString();
         /* TODO：自动复读 */
         if ((boolean) configList.get("SuccessiveRepeat_Permission")) {
             boolean isRepeat = false;
             for (int i = 0; i < repeatArray.size(); i++) {
                 // 获取字符串对象
                 String str = repeatArray.getString(i);
-                if (str.equals(messageContent)) {
+                if (str.equals(message)) {
                     // 设置当前处于复读状态
                     isRepeat = true;
-                    if (!((boolean) paramList.get("SuccessiveRepeat")) && messageContent.equals(paramList.get("LastMessage"))) {
-                        group.sendMessage(messageContent);
+                    if (!((boolean) paramList.get("SuccessiveRepeat")) && message.equals(paramList.get("LastMessage"))) {
+                        group.sendMessage(message);
                         // 设置连续复读标志位
                         paramList.put("SuccessiveRepeat", true);
                     }
@@ -151,7 +128,11 @@ public class XiaoFangZhou extends GroupMessageHandler {
                 paramList.put("SuccessiveRepeat", false);
             }
         }
+    }
 
+    private void autoSpecial(GroupMessageEvent event) {
+        String message = event.getMessage().contentToString();
+        long senderID = event.getSender().getId();
         /* TODO：自动回复特殊语句 */
         if ((boolean) configList.get("SpecialMessageReply_Permission")) {
             for (int i = 0; i < specialResponseArray.size(); i++) {
@@ -160,13 +141,13 @@ public class XiaoFangZhou extends GroupMessageHandler {
                 boolean trig = false;
                 switch (specialResponseObject.getString("trigType")) {
                     case "head": // 从头部开始查找
-                        trig = messageContent.startsWith(specialResponseObject.getString("message"));
+                        trig = message.startsWith(specialResponseObject.getString("message"));
                         break;
                     case "any": // 从任何地方开始查找
-                        trig = messageContent.contains(specialResponseObject.getString("message"));
+                        trig = message.contains(specialResponseObject.getString("message"));
                         break;
                     case "rear": // 从尾部开始查找
-                        trig = messageContent.endsWith(specialResponseObject.getString("message"));
+                        trig = message.endsWith(specialResponseObject.getString("message"));
                         break;
                 }
                 // 启动关键字匹配
@@ -175,7 +156,7 @@ public class XiaoFangZhou extends GroupMessageHandler {
                     JSONArray containMessage = specialResponseObject.getJSONArray("containMessage");
                     if (containMessage.size() == 0) {
                         // 如果什么都没写，那么就直接进行字符串检查
-                        trig = messageContent.equals(specialResponseObject.getString("message"));
+                        trig = message.equals(specialResponseObject.getString("message"));
                     } else {
                         // 如果写了什么，那么就进行匹配
                         for (int j = 0; j < containMessage.size(); j++) {
@@ -191,14 +172,14 @@ public class XiaoFangZhou extends GroupMessageHandler {
                             for (String str : andMessage) {
                                 // 对于分割出的每一个地方进行检测，如果为假则立刻退出
                                 if (str.startsWith("$")) {
-                                    if (messageContent.contains(str.substring(1))) {
+                                    if (message.contains(str.substring(1))) {
                                         System.out.println(str.substring(1));
                                         trig = false;
                                         break;
                                     }
                                     continue;
                                 }
-                                if (!(trig = messageContent.contains(str))) {
+                                if (!(trig = message.contains(str))) {
                                     break;
                                 }
                             }
@@ -229,57 +210,37 @@ public class XiaoFangZhou extends GroupMessageHandler {
                             FunctionHandler.groupUserFunction(function, userArray.get(senderID), event);
                         }
                     }
-                    System.out.println(!specialResponseObject.getBoolean("randReply")
-                            || (specialResponseObject.getBoolean("randReply") && new Random().nextBoolean()));
-                    if (!specialResponseObject.getBoolean("randReply")
-                            || (specialResponseObject.getBoolean("randReply") && new Random().nextBoolean())) {
+                    if (!specialResponseObject.getBoolean("randReply")) {
                         if (!isSpecialUser && replyArray.size() != 0) {
+                            // 获取一个索引
                             int replyIndex = new Random().nextInt(replyArray.size());
-                            group.sendMessage(MessageBuilder.MessageBuild(
-                                    replyArray.getString(replyIndex), event));
+                            group.sendMessage(replyArray.getString(replyIndex));
                         } else if (replyArray.size() + specialReplyArray.size() != 0) {
+                            // 获取一个索引，在两个Array之间切换
                             int replyIndex = new Random().nextInt(replyArray.size() + specialReplyArray.size());
                             if (replyIndex < replyArray.size())
-                                group.sendMessage(MessageBuilder.MessageBuild(
-                                        replyArray.getString(replyIndex), event));
+                                group.sendMessage(replyArray.getString(replyIndex));
                             else
-                                group.sendMessage(MessageBuilder.MessageBuild(
-                                        replyArray.getString(replyIndex - replyArray.size()), event));
+                                group.sendMessage(specialReplyArray.getString(replyIndex - replyArray.size()));
+                        }
+                    } else {
+                        if (new Random().nextBoolean()) {
+                            if (!isSpecialUser && replyArray.size() != 0) {
+                                int replyIndex = new Random().nextInt(replyArray.size());
+                                group.sendMessage(replyArray.getString(replyIndex));
+                            } else if (replyArray.size() + specialReplyArray.size() != 0) {
+                                int replyIndex = new Random().nextInt(replyArray.size() + specialReplyArray.size());
+                                if (replyIndex < replyArray.size())
+                                    group.sendMessage(replyArray.getString(replyIndex));
+                                else
+                                    group.sendMessage(specialReplyArray.getString(replyIndex - replyArray.size()));
+                            }
                         }
                     }
-                    break;
                 }
             }
         }
-        paramList.put("LastMessage",messageContent);
-}
 
-    @Override
-    public void onDelete() throws Exception {
-        UserDataHandler.saveJsonFile(userArray, rootPath + "XiaoFangZhou\\user.json");
-    }
-
-    public void onLoad() throws Exception {
-        /* TODO：json读取 */
-        // 读取自动复读
-        repeatArray = JsonLoader.jsonArrayLoader(rootPath + "XiaoFangZhou\\repeatList.json", this);
-        // 读取特殊语句回复
-        specialResponseArray = JsonLoader.jsonArrayLoader(rootPath + "XiaoFangZhou\\specialRepeatList.json", this);
-        // 读取用户信息
-        JSONArray userJsonArray = JsonLoader.jsonArrayLoader(rootPath + "XiaoFangZhou\\user.json", this);
-        for (int i = 0; i < userJsonArray.size(); i++) {
-            JSONObject userObject = userJsonArray.getJSONObject(i);
-            this.userArray.put(userObject.getLong("userID"),
-                    new UserDataHandler(
-                            userObject.getLong("userID"),
-                            userObject.getIntValue("like"),
-                            userObject.getBoolean("isSpecialUser"),
-                            userObject.getBoolean("isAdministrator"),
-                            userObject.getIntValue("hasFuck"),
-                            userObject.getString("name")
-                    ));
-        }
-        // 读取定时任务列表
-        scheduleTaskArray = JsonLoader.jsonArrayLoader(rootPath + "XiaoFangZhou\\scheduleTask.json", this);
+        paramList.put("LastMessage", message);
     }
 }
