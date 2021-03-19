@@ -3,19 +3,24 @@ package com.yanghui.LingYueBot.groupHandler;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.yanghui.LingYueBot.core.*;
+import com.yanghui.LingYueBot.core.messageHandler.GroupMessageHandler;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.mamoe.mirai.message.data.PlainText;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class XiaoFangZhou extends GroupMessageHandler {
 
     private final HashMap<String, Object> paramList = new HashMap<>();
-    private final HashMap<String, Object> configList = new HashMap<>();
+    public final HashMap<String, Object> configList = new HashMap<>();
     private final HashMap<Long, UserDataHandler> userArray = new HashMap<>();
-    private final String rootPath = "D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiCore\\plugins\\LingYue_resources\\";
+    public final Vector<File> sexPictureArray = new Vector<>();
+    private final String rootPath = "D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\";
+    public String picPath = "D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\XiaoFangZhou\\pictureSrc";
     private JSONArray repeatArray;
     private JSONArray specialResponseArray;
     private JSONArray scheduleTaskArray;
@@ -25,6 +30,7 @@ public class XiaoFangZhou extends GroupMessageHandler {
         paramList.put("LastMessage", "");
         configList.put("SuccessiveRepeat_Permission", true);
         configList.put("SpecialMessageReply_Permission", true);
+        configList.put("Picture_Permission", true);
         configList.put("OnActive", true);
     }
 
@@ -35,18 +41,23 @@ public class XiaoFangZhou extends GroupMessageHandler {
         // 获取当前系统日期
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
         Timer scheduleTimer = new Timer();
+        final String[] pastTime = {""};
         scheduleTimer.schedule(new TimerTask() {
             @Override
             public void run() {
                 String nowTime = sdf.format(new Date());
+                if (nowTime.equals(pastTime[0])) {
+                    return;
+                }
                 System.out.println(nowTime);
                 for (int i = 0; i < scheduleTaskArray.size(); i++) {
                     if (nowTime.equals(scheduleTaskArray.getJSONObject(i).getString("time"))) {
                         if (group != null) {
-                            group.sendMessage(scheduleTaskArray.getJSONObject(i).getString("message"));
+                            group.sendMessage(MessageBuilder.MessageBuild(scheduleTaskArray.getJSONObject(i).getString("message"), null));
                         }
                     }
                 }
+                pastTime[0] = nowTime;
             }
         }, 10, 1000 * 30);
     }
@@ -98,6 +109,13 @@ public class XiaoFangZhou extends GroupMessageHandler {
                 case "LingYue -close repeat":
                     configList.put("SuccessiveRepeat_Permission", false);
                     group.sendMessage("呜呜呜，我再也不复读了");
+                    break;
+                case "LingYue -close pic":
+                    configList.put("Picture_Permission", false);
+                    group.sendMessage("呜呜呜，阳姐姐我再也不ghs了");
+                    break;
+                case "LingYue -open pic":
+                    configList.put("Picture_Permission", true);
                     break;
                 case "LingYue -open repeat":
                     configList.put("SuccessiveRepeat_Permission", true);
@@ -220,13 +238,13 @@ public class XiaoFangZhou extends GroupMessageHandler {
                         JSONArray functionArray = specialResponseObject.getJSONArray("specialFunction");
                         for (int j = 0; j < functionArray.size(); j++) {
                             String function = functionArray.getString(j);
-                            FunctionHandler.groupUserFunction(function, userArray.get(senderID), event);
+                            FunctionHandler.xiaoFangZhouFunction(function, userArray.get(senderID), event, this);
                         }
                     } else {
                         JSONArray functionArray = specialResponseObject.getJSONArray("function");
                         for (int j = 0; j < functionArray.size(); j++) {
                             String function = functionArray.getString(j);
-                            FunctionHandler.groupUserFunction(function, userArray.get(senderID), event);
+                            FunctionHandler.xiaoFangZhouFunction(function, userArray.get(senderID), event, this);
                         }
                     }
                     System.out.println(!specialResponseObject.getBoolean("randReply")
@@ -251,8 +269,8 @@ public class XiaoFangZhou extends GroupMessageHandler {
                 }
             }
         }
-        paramList.put("LastMessage",messageContent);
-}
+        paramList.put("LastMessage", messageContent);
+    }
 
     @Override
     public void onDelete() throws Exception {
@@ -281,5 +299,14 @@ public class XiaoFangZhou extends GroupMessageHandler {
         }
         // 读取定时任务列表
         scheduleTaskArray = JsonLoader.jsonArrayLoader(rootPath + "XiaoFangZhou\\scheduleTask.json", this);
+        // 读取涩图
+        synchronized (sexPictureArray) {
+            sexPictureArray.clear();
+            File[] pictures = new File(picPath).listFiles();
+            if (pictures == null) {
+                throw new Exception("图片加载错误");
+            }
+            sexPictureArray.addAll(Arrays.asList(pictures));
+        }
     }
 }

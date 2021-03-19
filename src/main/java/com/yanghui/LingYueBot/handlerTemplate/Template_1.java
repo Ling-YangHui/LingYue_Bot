@@ -3,9 +3,10 @@ package com.yanghui.LingYueBot.handlerTemplate;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.yanghui.LingYueBot.core.FunctionHandler;
-import com.yanghui.LingYueBot.core.GroupMessageHandler;
+import com.yanghui.LingYueBot.core.messageHandler.GroupMessageHandler;
 import com.yanghui.LingYueBot.core.JsonLoader;
 import com.yanghui.LingYueBot.core.UserDataHandler;
+import com.yanghui.LingYueBot.groupHandler.XiaoFangZhou;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 
 import java.text.SimpleDateFormat;
@@ -201,13 +202,13 @@ public abstract class Template_1 extends GroupMessageHandler {
                         JSONArray functionArray = specialResponseObject.getJSONArray("specialFunction");
                         for (int j = 0; j < functionArray.size(); j++) {
                             String function = functionArray.getString(j);
-                            FunctionHandler.groupUserFunction(function, userArray.get(senderID), event);
+                            FunctionHandler.xiaoFangZhouFunction(function, userArray.get(senderID), event, null);
                         }
                     } else {
                         JSONArray functionArray = specialResponseObject.getJSONArray("function");
                         for (int j = 0; j < functionArray.size(); j++) {
                             String function = functionArray.getString(j);
-                            FunctionHandler.groupUserFunction(function, userArray.get(senderID), event);
+                            FunctionHandler.xiaoFangZhouFunction(function, userArray.get(senderID), event,null);
                         }
                     }
                     if (!specialResponseObject.getBoolean("randReply")) {

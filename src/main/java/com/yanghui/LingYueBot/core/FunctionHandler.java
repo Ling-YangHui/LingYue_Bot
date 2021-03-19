@@ -1,14 +1,17 @@
 package com.yanghui.LingYueBot.core;
 
+import com.yanghui.LingYueBot.functions.SendSexPictures;
+import com.yanghui.LingYueBot.groupHandler.XiaoFangZhou;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.At;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 
+import java.io.File;
 import java.util.Random;
 
 public class FunctionHandler {
 
-    public static void groupUserFunction(String function, UserDataHandler handler, GroupMessageEvent event) {
+    public static void xiaoFangZhouFunction(String function, UserDataHandler handler, GroupMessageEvent event, XiaoFangZhou target) {
         MessageChainBuilder response = new MessageChainBuilder(5);
         // 函数参数列表
         String[] functionList = function.split(" ");
@@ -70,11 +73,43 @@ public class FunctionHandler {
                 break;
             /* TODO：透相关方法 */
             case "Fuck":
-                switch (functionList[1]){
+                switch (functionList[1]) {
                     case "-Plus":
                         handler.hasFuck = handler.hasFuck + 1;
                         break;
                 }
+                /* TODO：发送特殊内容相关方法 */
+            case "Send":
+                switch (functionList[1]) {
+                    // 发送图片类型
+                    case "-Image":
+                        if (!(boolean) target.configList.get("Picture_Permission"))
+                            break;
+                        switch (functionList[2]) {
+                            case "-Rand":
+                                synchronized (target.sexPictureArray) {
+                                    int index = new Random().nextInt(target.sexPictureArray.size());
+                                    SendSexPictures.sendSexPictures(
+                                            target.sexPictureArray.get(index),
+                                            target.group);
+                                    break;
+                                }
+                            case "-Named" :
+                                File file = new File(target.picPath + "\\" + functionList[3]);
+                                if (!file.exists()) {
+                                    break;
+                                }
+                                SendSexPictures.sendSexPictures(
+                                        new File(target.picPath + "\\" + functionList[3]),
+                                        target.group
+                                );
+                                break;
+                            case "-Internet":
+                                SendSexPictures.sendSexPicturesFromInternet(target.group);
+                                break;
+                        }
+                }
+                break;
         }
     }
 }

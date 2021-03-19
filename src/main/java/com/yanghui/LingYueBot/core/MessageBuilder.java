@@ -1,12 +1,18 @@
 package com.yanghui.LingYueBot.core;
 
+import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.*;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
 
 public class MessageBuilder {
 
     public static MessageChain MessageBuild(String messageStr, GroupMessageEvent event) {
-        long senderID = event.getSender().getId();
+        long senderID = 2411046022L;
+        if (event != null)
+            senderID = event.getSender().getId();
         String[] messageList = messageStr.split("&");
         MessageChainBuilder builder = new MessageChainBuilder(16);
         for (String str : messageList) {
