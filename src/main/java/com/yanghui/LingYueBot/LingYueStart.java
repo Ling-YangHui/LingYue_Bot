@@ -1,6 +1,6 @@
 package com.yanghui.LingYueBot;
 
-import com.yanghui.LingYueBot.UserHandler.AdministratorHandler;
+import com.yanghui.LingYueBot.UserHandler.CommonUserHandler;
 import com.yanghui.LingYueBot.core.messageHandler.GroupMessageHandler;
 import com.yanghui.LingYueBot.core.messageHandler.UserMessageHandler;
 import com.yanghui.LingYueBot.groupHandler.BeiShiCheDui;
@@ -9,16 +9,14 @@ import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.console.extension.PluginComponentStorage;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
-import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.Listener;
-import net.mamoe.mirai.event.events.BotOfflineEvent;
 import net.mamoe.mirai.event.events.BotOnlineEvent;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.UserMessageEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 
 
@@ -38,19 +36,12 @@ public class LingYueStart extends JavaPlugin {
         /* 监听登录事件 */
         Listener<?> loginListener = GlobalEventChannel.INSTANCE.subscribeAlways(BotOnlineEvent.class, botOnlineEvent -> {
             for (long groupID : groupHandlerHashMap.keySet()) {
-                (groupHandlerHashMap.get(groupID).group = Bot.getInstance(3598326822L).getGroup(groupID)).sendMessage("----Bot已上线----");
+                groupHandlerHashMap.get(groupID).group = Bot.getInstance(3598326822L).getGroup(groupID);
                 System.out.println("成功加载群: " + groupID + " " + groupHandlerHashMap.get(groupID).group.getName());
             }
-            for (long userID : userHandlerHashMap.keySet()) {
-                (userHandlerHashMap.get(userID)).user = Bot.getInstance(3598326822L).getFriend(userID);
-                System.out.println("成功加载用户: " + userID + " " + userHandlerHashMap.get(userID).user.getNick());
-            }
-        });
-
-        /* 监听下线事件 */
-        Listener<?> offlineListener = GlobalEventChannel.INSTANCE.subscribeAlways(BotOfflineEvent.class, botOfflineEvent -> {
-            for (long groupID : groupHandlerHashMap.keySet()) {
-                groupHandlerHashMap.get(groupID).group.sendMessage("----Bot已下线----");
+            for (String id : CommonUserHandler.userInfo.keySet()) {
+                long idNum = CommonUserHandler.userInfo.getJSONObject(id).getLong("id");
+                userHandlerHashMap.put(idNum, new CommonUserHandler(idNum));
             }
         });
 
@@ -68,12 +59,15 @@ public class LingYueStart extends JavaPlugin {
 
         /* TODO：处理用户消息 */
         Listener<?> userMessageEventListener = GlobalEventChannel.INSTANCE.subscribeAlways(UserMessageEvent.class, userMessageEvent -> {
-            synchronized (userHandlerHashMap.get(userMessageEvent.getSubject().getId())) {
-                try {
+            try {
+                synchronized (userHandlerHashMap.get(userMessageEvent.getSubject().getId())) {
                     userHandlerHashMap.get(userMessageEvent.getSubject().getId()).onHandleMessage(userMessageEvent);
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
+            } catch (Exception e) {
+                if (userHandlerHashMap.get(userMessageEvent.getSubject().getId()) == null) {
+                    userHandlerHashMap.put(userMessageEvent.getSender().getId(), new CommonUserHandler(userMessageEvent.getSender()));
+                }
+                userHandlerHashMap.get(userMessageEvent.getSubject().getId()).onHandleMessage(userMessageEvent);
             }
         });
     }
@@ -85,14 +79,6 @@ public class LingYueStart extends JavaPlugin {
         groupHandlerHashMap.put(717151707L, new XiaoFangZhou());
         groupHandlerHashMap.put(1121098457L, new BeiShiCheDui());
         for (GroupMessageHandler handler : groupHandlerHashMap.values()) {
-            try {
-                handler.onCreate();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        userHandlerHashMap.put(2411046022L, new AdministratorHandler());
-        for (UserMessageHandler handler : userHandlerHashMap.values()) {
             try {
                 handler.onCreate();
             } catch (Exception e) {
@@ -111,8 +97,10 @@ public class LingYueStart extends JavaPlugin {
                 e.printStackTrace();
             }
         }
-        for (long groupID : groupHandlerHashMap.keySet()) {
-            groupHandlerHashMap.get(groupID).group.sendMessage("----Bot已下线----");
+        try {
+            CommonUserHandler.saveData();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

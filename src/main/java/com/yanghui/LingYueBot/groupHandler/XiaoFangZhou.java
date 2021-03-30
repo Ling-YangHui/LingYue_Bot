@@ -2,12 +2,14 @@ package com.yanghui.LingYueBot.groupHandler;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.yanghui.LingYueBot.core.*;
+import com.yanghui.LingYueBot.core.FunctionHandler;
+import com.yanghui.LingYueBot.core.JsonLoader;
+import com.yanghui.LingYueBot.core.MessageBuilder;
+import com.yanghui.LingYueBot.core.UserDataHandler;
 import com.yanghui.LingYueBot.core.messageHandler.GroupMessageHandler;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
-import net.mamoe.mirai.message.data.PlainText;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -158,7 +160,7 @@ public class XiaoFangZhou extends GroupMessageHandler {
                     // 设置当前处于复读状态
                     isRepeat = true;
                     if (!((boolean) paramList.get("SuccessiveRepeat")) && messageContent.equals(paramList.get("LastMessage"))) {
-                        group.sendMessage(messageContent);
+                        group.sendMessage(message);
                         // 设置连续复读标志位
                         paramList.put("SuccessiveRepeat", true);
                     }
@@ -262,7 +264,7 @@ public class XiaoFangZhou extends GroupMessageHandler {
                                         replyArray.getString(replyIndex), event));
                             else
                                 group.sendMessage(MessageBuilder.MessageBuild(
-                                        replyArray.getString(replyIndex - replyArray.size()), event));
+                                        specialReplyArray.getString(replyIndex - replyArray.size()), event));
                         }
                     }
                     break;
