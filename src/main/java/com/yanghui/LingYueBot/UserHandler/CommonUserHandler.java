@@ -1,8 +1,11 @@
 package com.yanghui.LingYueBot.UserHandler;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.yanghui.LingYueBot.core.JsonLoader;
+import com.yanghui.LingYueBot.core.codeInterpreter.ConditionInterpreter;
+import com.yanghui.LingYueBot.core.codeInterpreter.OperationInterpreter;
 import com.yanghui.LingYueBot.core.messageHandler.UserMessageHandler;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.User;
@@ -10,13 +13,14 @@ import net.mamoe.mirai.event.events.UserMessageEvent;
 import net.mamoe.mirai.message.data.Message;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 public class CommonUserHandler extends UserMessageHandler {
 
     private static final String rootPath = "D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\Users\\";
     public static JSONObject userInfo;
-    static JSONArray replyList;
-    static Long[] forbidSendList = {666000L};
+    public static HashMap<String, Object> botStatus = new HashMap<>();
+    public static JSONArray replyList;
 
     /* 初始化静态代码块 */
     static {
@@ -42,8 +46,6 @@ public class CommonUserHandler extends UserMessageHandler {
     public CommonUserHandler(User user) {
         this.user = user;
         this.id = Long.toString(user.getId());
-        user.sendMessage("*** 欢迎注册LingYue！ ***\n请完成以下问题并最终完成注册");
-        user.sendMessage("1. 你是BUAAer吗？（回答true & false）\n2. 你的性别？（回答male & female & secret）\n不区分大小写，请按照括号中的要求回答哦。回答请在一条回复里完成，不同答案用一个空格分开");
         addUser(user);
         this.userObject = userInfo.getJSONObject(this.id);
     }
@@ -53,7 +55,7 @@ public class CommonUserHandler extends UserMessageHandler {
     }
 
     public static void saveData() throws IOException {
-        JsonLoader.saveJSON(rootPath + "userInfo.json", userInfo);
+        JsonLoader.saveJSONObject(rootPath + "userInfo.json", userInfo);
     }
 
     @Override
@@ -65,8 +67,6 @@ public class CommonUserHandler extends UserMessageHandler {
     public void onHandleMessage(UserMessageEvent event) {
         Message message = event.getMessage();
         String messageText = message.contentToString();
-
-        System.out.println("trig");
         if (!userObject.getBoolean("valid")) {
             register(event);
             return;
@@ -74,10 +74,12 @@ public class CommonUserHandler extends UserMessageHandler {
 
         try {
             orderHandle(event);
+            writeReply(event);
         } catch (Exception e) {
             user.sendMessage("指令错误");
         }
 
+        reply(event);
 
         isFirstSpeak = false;
     }
@@ -137,6 +139,12 @@ public class CommonUserHandler extends UserMessageHandler {
                 }
                 userObject.put("gender", orderString[3]);
             }
+            if (orderString[2].equals("-isBUAAer")) {
+                if (!orderString[3].equals("true") && !orderString[3].equals("false")) {
+                    throw new Exception();
+                }
+                userObject.put("isBUAAer", Boolean.parseBoolean(orderString[3]));
+            }
         }
     }
 
@@ -145,6 +153,52 @@ public class CommonUserHandler extends UserMessageHandler {
      */
     /* TODO: LingYue写入数据集 */
     private void writeReply(UserMessageEvent event) throws Exception {
+        Message message = event.getMessage();
+        String messageText = message.contentToString();
+        if (!messageText.startsWith("EditDataBase")) {
+            return;
+        }
+        String json = messageText.split(": ", 2)[1];
+        JSONObject newReplyJson = JSON.parseObject(json);
+        if (newReplyJson == null) {
+            throw new Exception();
+        }
+        replyList.add(newReplyJson);
+        user.sendMessage("数据集写入成功！");
+    }
 
+    /**
+     * 回复编译
+     */
+    private void reply(UserMessageEvent event) {
+        Message message = event.getMessage();
+        String messageText = message.contentToString();
+        System.out.println("t");
+        JSONObject replyObject = null;
+        for (int i = 0; i < replyList.size(); i++) {
+            replyObject = replyList.getJSONObject(i);
+            JSONArray trigMessage = replyObject.getJSONArray("trigMessage");
+            boolean hasTrig = false;
+            for (int j = 0; j < trigMessage.size(); j++) {
+                if (messageText.contains(trigMessage.getString(j))) {
+                    hasTrig = true;
+                    break;
+                }
+            }
+            if (!hasTrig)
+                continue;
+            boolean conditionSatisfied = false;
+            int satisfiedNum = -1;
+            for (int j = 0; j < replyObject.getJSONArray("condition").size(); j++) {
+                conditionSatisfied = ConditionInterpreter.getConditionSatisfied(replyObject.getJSONArray("condition"), 0, event);
+                if (conditionSatisfied) {
+                    satisfiedNum = j;
+                    break;
+                }
+            }
+            if (!conditionSatisfied)
+                continue;
+            OperationInterpreter.execute(replyObject, satisfiedNum, event);
+        }
     }
 }

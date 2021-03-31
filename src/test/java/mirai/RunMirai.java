@@ -6,7 +6,7 @@ import net.mamoe.mirai.utils.BotConfiguration;
 
 public class RunMirai {
     public static void main(String[] args) {
-        Bot bot = BotFactory.INSTANCE.newBot(123456, "password");
+        Bot bot = BotFactory.INSTANCE.newBot(3598326822L, "zy20190099");
         bot.login();
     }
 }

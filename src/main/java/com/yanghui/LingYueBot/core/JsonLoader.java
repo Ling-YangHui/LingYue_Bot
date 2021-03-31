@@ -30,13 +30,33 @@ public class JsonLoader {
         return JSON.parseObject(fileContent.toString());
     }
 
-    public static void saveJSON(String path, JSON json) throws IOException {
+    public static void saveJSONObject(String path, JSON json) throws IOException {
         Writer jsonWriter = new OutputStreamWriter(new FileOutputStream(path + ".json"), StandardCharsets.UTF_8);
         jsonWriter.write(json.toJSONString());
         jsonWriter.flush();
         jsonWriter.close();
         // 开始校验文件是否合法写入
         JSONObject array = JsonLoader.jsonObjectLoader(path + ".json");
+        if (!array.isEmpty()) {
+            FileInputStream inputStream = new FileInputStream(path + ".json");
+            FileOutputStream outputStream = new FileOutputStream(path);
+            byte[] buf = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buf)) != -1) {
+                outputStream.write(buf, 0, bytesRead);
+            }
+            inputStream.close();
+            outputStream.close();
+        }
+    }
+
+    public static void saveJSONArray(String path, JSON json) throws IOException {
+        Writer jsonWriter = new OutputStreamWriter(new FileOutputStream(path + ".json"), StandardCharsets.UTF_8);
+        jsonWriter.write(json.toJSONString());
+        jsonWriter.flush();
+        jsonWriter.close();
+        // 开始校验文件是否合法写入
+        JSONArray array = JsonLoader.jsonArrayLoader(path + ".json", null);
         if (!array.isEmpty()) {
             FileInputStream inputStream = new FileInputStream(path + ".json");
             FileOutputStream outputStream = new FileOutputStream(path);
