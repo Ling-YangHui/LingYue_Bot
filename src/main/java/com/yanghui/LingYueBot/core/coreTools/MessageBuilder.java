@@ -1,11 +1,10 @@
-package com.yanghui.LingYueBot.core;
+package com.yanghui.LingYueBot.core.coreTools;
 
-import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.message.data.*;
-import org.jetbrains.annotations.NotNull;
-
-import java.io.File;
+import net.mamoe.mirai.message.data.At;
+import net.mamoe.mirai.message.data.Face;
+import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.message.data.MessageChainBuilder;
 
 public class MessageBuilder {
 

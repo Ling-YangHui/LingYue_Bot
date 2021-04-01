@@ -3,9 +3,9 @@ package com.yanghui.LingYueBot.UserHandler;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.yanghui.LingYueBot.core.JsonLoader;
-import com.yanghui.LingYueBot.core.codeInterpreter.ConditionInterpreter;
 import com.yanghui.LingYueBot.core.codeInterpreter.OperationInterpreter;
+import com.yanghui.LingYueBot.core.codeInterpreter.conditionInterpreter.ConditionInterpreter;
+import com.yanghui.LingYueBot.core.coreTools.JsonLoader;
 import com.yanghui.LingYueBot.core.messageHandler.UserMessageHandler;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.User;
@@ -34,20 +34,20 @@ public class CommonUserHandler extends UserMessageHandler {
 
     private final User user;
     private final String id;
-    private final JSONObject userObject;
+    private final JSONObject thisUserObject;
     private boolean isFirstSpeak = true;
 
     public CommonUserHandler(Long id) {
         this.id = Long.toString(id);
         this.user = Bot.getInstances().get(0).getFriend(id) == null ? Bot.getInstances().get(0).getStranger(id) : Bot.getInstances().get(0).getFriend(id);
-        this.userObject = userInfo.getJSONObject(this.id);
+        this.thisUserObject = userInfo.getJSONObject(this.id);
     }
 
     public CommonUserHandler(User user) {
         this.user = user;
         this.id = Long.toString(user.getId());
         addUser(user);
-        this.userObject = userInfo.getJSONObject(this.id);
+        this.thisUserObject = userInfo.getJSONObject(this.id);
     }
 
     public static void addUser(User user) {
@@ -67,14 +67,16 @@ public class CommonUserHandler extends UserMessageHandler {
     public void onHandleMessage(UserMessageEvent event) {
         Message message = event.getMessage();
         String messageText = message.contentToString();
-        if (!userObject.getBoolean("valid")) {
+        if (!thisUserObject.getBoolean("valid")) {
             register(event);
+            isFirstSpeak = false;
             return;
         }
 
         try {
             orderHandle(event);
             writeReply(event);
+            administratorOrderHandle(event);
         } catch (Exception e) {
             user.sendMessage("指令错误");
         }
@@ -110,10 +112,10 @@ public class CommonUserHandler extends UserMessageHandler {
                     return;
                 }
             }
-            userObject.put("isBUAAer", Boolean.parseBoolean(answer[0]));
-            userObject.put("gender", answer[1]);
-            userObject.put("valid", true);
-            user.sendMessage("注册成功！注册数据：" + userObject);
+            thisUserObject.put("isBUAAer", Boolean.parseBoolean(answer[0]));
+            thisUserObject.put("gender", answer[1]);
+            thisUserObject.put("valid", true);
+            user.sendMessage("注册成功！注册数据：" + thisUserObject);
         } catch (Exception e) {
             if (!isFirstSpeak)
                 user.sendMessage("格式错误了！请重新输入");
@@ -137,16 +139,58 @@ public class CommonUserHandler extends UserMessageHandler {
                 if (!orderString[3].equals("male") && !orderString[3].equals("female") && !orderString[3].equals("secret")) {
                     throw new Exception();
                 }
-                userObject.put("gender", orderString[3]);
+                thisUserObject.put("gender", orderString[3]);
             }
             if (orderString[2].equals("-isBUAAer")) {
                 if (!orderString[3].equals("true") && !orderString[3].equals("false")) {
                     throw new Exception();
                 }
-                userObject.put("isBUAAer", Boolean.parseBoolean(orderString[3]));
+                thisUserObject.put("isBUAAer", Boolean.parseBoolean(orderString[3]));
             }
         }
     }
+
+    /**
+     * 管理员指令集
+     */
+    /* TODO: 管理员指令集合 */
+    private void administratorOrderHandle(UserMessageEvent event) throws Exception {
+        if (!thisUserObject.getBoolean("isAdministrator")) {
+            return;
+        }
+        boolean done = false;
+        Message message = event.getMessage();
+        String messageText = message.contentToString();
+        String[] orderString = messageText.split(" ");
+        if (!orderString[0].equals("LingYue")) {
+            return;
+        }
+        /* 刷新数据 */
+        if (orderString[1].equals("-reload")) {
+            switch (orderString[2]) {
+                case "-all":
+                    replyList = JsonLoader.jsonArrayLoader(rootPath + "reply.json", null);
+                    userInfo = JsonLoader.jsonObjectLoader(rootPath + "userInfo.json");
+                    done = true;
+                    break;
+                case "-reply":
+                    replyList = JsonLoader.jsonArrayLoader(rootPath + "reply.json", null);
+                    done = true;
+                    break;
+                case "-user":
+                    userInfo = JsonLoader.jsonObjectLoader(rootPath + "userInfo.json");
+                    done = true;
+                    break;
+            }
+        }
+        if (orderString[1].equals("-save")) {
+            saveData();
+            done = true;
+        }
+        if (done)
+            user.sendMessage("执行完毕");
+    }
+
 
     /**
      * 数据集写入
@@ -174,7 +218,7 @@ public class CommonUserHandler extends UserMessageHandler {
         Message message = event.getMessage();
         String messageText = message.contentToString();
         System.out.println("t");
-        JSONObject replyObject = null;
+        JSONObject replyObject;
         for (int i = 0; i < replyList.size(); i++) {
             replyObject = replyList.getJSONObject(i);
             JSONArray trigMessage = replyObject.getJSONArray("trigMessage");

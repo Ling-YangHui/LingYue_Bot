@@ -1,4 +1,4 @@
-package com.yanghui.LingYueBot.core;
+package com.yanghui.LingYueBot.core.coreTools;
 
 import com.yanghui.LingYueBot.functions.SendSexPictures;
 import com.yanghui.LingYueBot.groupHandler.XiaoFangZhou;

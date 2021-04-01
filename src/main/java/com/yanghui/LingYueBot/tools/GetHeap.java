@@ -2,7 +2,7 @@ package com.yanghui.LingYueBot.tools;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.yanghui.LingYueBot.core.JsonLoader;
+import com.yanghui.LingYueBot.core.coreTools.JsonLoader;
 
 import java.io.IOException;
 import java.util.Vector;

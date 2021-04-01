@@ -2,14 +2,13 @@ package com.yanghui.LingYueBot.groupHandler;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.yanghui.LingYueBot.core.FunctionHandler;
-import com.yanghui.LingYueBot.core.JsonLoader;
-import com.yanghui.LingYueBot.core.MessageBuilder;
-import com.yanghui.LingYueBot.core.UserDataHandler;
+import com.yanghui.LingYueBot.core.coreTools.FunctionHandler;
+import com.yanghui.LingYueBot.core.coreTools.JsonLoader;
+import com.yanghui.LingYueBot.core.coreTools.MessageBuilder;
+import com.yanghui.LingYueBot.core.coreTools.UserDataHandler;
 import com.yanghui.LingYueBot.core.messageHandler.GroupMessageHandler;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.MessageChainBuilder;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -17,10 +16,10 @@ import java.util.*;
 
 public class XiaoFangZhou extends GroupMessageHandler {
 
-    private final HashMap<String, Object> paramList = new HashMap<>();
     public final HashMap<String, Object> configList = new HashMap<>();
-    private final HashMap<Long, UserDataHandler> userArray = new HashMap<>();
     public final Vector<File> sexPictureArray = new Vector<>();
+    private final HashMap<String, Object> paramList = new HashMap<>();
+    private final HashMap<Long, UserDataHandler> userArray = new HashMap<>();
     private final String rootPath = "D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\";
     public String picPath = "D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\XiaoFangZhou\\pictureSrc";
     private JSONArray repeatArray;
@@ -67,7 +66,6 @@ public class XiaoFangZhou extends GroupMessageHandler {
     @Override
     public void onHandleMessage(GroupMessageEvent event) {
         MessageChain message = event.getMessage();
-        MessageChainBuilder response = new MessageChainBuilder(10);
         String messageContent = event.getMessage().contentToString();
         group = event.getGroup();
         long senderID = event.getSender().getId();
