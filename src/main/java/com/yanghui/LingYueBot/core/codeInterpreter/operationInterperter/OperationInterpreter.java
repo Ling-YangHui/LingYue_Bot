@@ -1,7 +1,8 @@
-package com.yanghui.LingYueBot.core.codeInterpreter;
+package com.yanghui.LingYueBot.core.codeInterpreter.operationInterperter;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.data.Face;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
@@ -39,9 +40,8 @@ public class OperationInterpreter {
         }
     }
 
-    private static void executeReply(String replyStr, MessageEvent event) {
+    public static void executeReply(String replyStr, Contact contact) {
         String[] replyList = replyStr.split("&&");
-        System.out.println(replyList);
         for (String str : replyList) {
             String[] reply = str.split("&");
             MessageChainBuilder builder = new MessageChainBuilder();
@@ -54,12 +54,21 @@ public class OperationInterpreter {
                     builder.add(new Face(Integer.parseInt(replyItem.substring(5))));
                 }
             }
-            event.getSender().sendMessage(builder.asMessageChain());
+            contact.sendMessage(builder.asMessageChain());
         }
     }
 
-    private static void executeOperation(String operation, MessageEvent event) {
+    public static void executeReply(String replyStr, MessageEvent event) {
+        executeReply(replyStr, event.getSender());
+    }
 
+    public static void executeOperation(String operation, MessageEvent event) {
+        String[] instructionList = operation.split(" ");
+        if (instructionList[0].equals("Like")) {
+            if (instructionList[1].equals("-Rise")) {
+
+            }
+        }
     }
 
 }

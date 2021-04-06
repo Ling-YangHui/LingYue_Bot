@@ -3,6 +3,7 @@ package com.yanghui.LingYueBot.core.codeInterpreter.conditionInterpreter;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.yanghui.LingYueBot.UserHandler.CommonUserHandler;
+import com.yanghui.LingYueBot.annotations.PoweredByMirai;
 import net.mamoe.mirai.event.events.MessageEvent;
 
 import java.util.HashMap;
@@ -25,6 +26,7 @@ class InputBuffer {
         return c == '&' || c == '|' || c == '!' || c == '=' || c == '(' || c == ')';
     }
 
+    @PoweredByMirai
     public Node getNode(MessageEvent event) {
         String senderID = Long.toString(event.getSender().getId());
         String messageContent = event.getMessage().contentToString();

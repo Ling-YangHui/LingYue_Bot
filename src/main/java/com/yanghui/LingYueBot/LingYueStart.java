@@ -13,6 +13,7 @@ import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.Listener;
 import net.mamoe.mirai.event.events.BotOnlineEvent;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
+import net.mamoe.mirai.event.events.NewFriendRequestEvent;
 import net.mamoe.mirai.event.events.UserMessageEvent;
 import org.jetbrains.annotations.NotNull;
 
@@ -70,6 +71,8 @@ public class LingYueStart extends JavaPlugin {
                 userHandlerHashMap.get(userMessageEvent.getSubject().getId()).onHandleMessage(userMessageEvent);
             }
         });
+
+        Listener<?> newFriendsEventListener = GlobalEventChannel.INSTANCE.subscribeAlways(NewFriendRequestEvent.class, NewFriendRequestEvent::accept);
     }
 
     @Override

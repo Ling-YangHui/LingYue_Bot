@@ -14,12 +14,11 @@ public class SendSexPictures {
         Contact.Companion.sendImage(contact, file, fileName[fileName.length - 1]);
     }
 
-    /*
+    /**
      * 从API中获取一张图片，然后发送这张图片
      *
-     * @param: Contact contact
-     *
-     * */
+     * @param contact 发送的对象
+     */
     public static void sendSexPicturesFromInternet(Contact contact) {
         try {
             URL site = new URL("https://api.dongmanxingkong.com/suijitupian/acg/1080p/index.php");

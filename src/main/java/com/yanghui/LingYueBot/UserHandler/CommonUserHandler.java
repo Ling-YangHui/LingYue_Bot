@@ -3,8 +3,9 @@ package com.yanghui.LingYueBot.UserHandler;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.yanghui.LingYueBot.core.codeInterpreter.OperationInterpreter;
+import com.yanghui.LingYueBot.LingYueStart;
 import com.yanghui.LingYueBot.core.codeInterpreter.conditionInterpreter.ConditionInterpreter;
+import com.yanghui.LingYueBot.core.codeInterpreter.operationInterperter.OperationInterpreter;
 import com.yanghui.LingYueBot.core.coreTools.JsonLoader;
 import com.yanghui.LingYueBot.core.messageHandler.UserMessageHandler;
 import net.mamoe.mirai.Bot;
@@ -13,7 +14,11 @@ import net.mamoe.mirai.event.events.UserMessageEvent;
 import net.mamoe.mirai.message.data.Message;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class CommonUserHandler extends UserMessageHandler {
 
@@ -21,12 +26,14 @@ public class CommonUserHandler extends UserMessageHandler {
     public static JSONObject userInfo;
     public static HashMap<String, Object> botStatus = new HashMap<>();
     public static JSONArray replyList;
+    public static JSONArray scheduleList;
 
     /* 初始化静态代码块 */
     static {
         try {
-            replyList = JsonLoader.jsonArrayLoader(rootPath + "reply.json", null);
+            replyList = JsonLoader.jsonArrayLoader(rootPath + "reply.json");
             userInfo = JsonLoader.jsonObjectLoader(rootPath + "userInfo.json");
+            scheduleList = JsonLoader.jsonArrayLoader(rootPath + "schedule.json");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -35,12 +42,14 @@ public class CommonUserHandler extends UserMessageHandler {
     private final User user;
     private final String id;
     private final JSONObject thisUserObject;
+    private final HashMap<String, Object> userStatus = new HashMap<>();
     private boolean isFirstSpeak = true;
 
     public CommonUserHandler(Long id) {
         this.id = Long.toString(id);
         this.user = Bot.getInstances().get(0).getFriend(id) == null ? Bot.getInstances().get(0).getStranger(id) : Bot.getInstances().get(0).getFriend(id);
         this.thisUserObject = userInfo.getJSONObject(this.id);
+        this.userStatus.put("reTransAll", false);
     }
 
     public CommonUserHandler(User user) {
@@ -48,6 +57,7 @@ public class CommonUserHandler extends UserMessageHandler {
         this.id = Long.toString(user.getId());
         addUser(user);
         this.thisUserObject = userInfo.getJSONObject(this.id);
+        this.userStatus.put("reTransAll", false);
     }
 
     public static void addUser(User user) {
@@ -60,7 +70,30 @@ public class CommonUserHandler extends UserMessageHandler {
 
     @Override
     public void onCreate() throws Exception {
-
+        /* 启动定时模块 */
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+        Timer scheduleTimer = new Timer();
+        final String[] pastTime = {""};
+        scheduleTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                String nowTime = sdf.format(new Date());
+                if (nowTime.equals(pastTime[0])) {
+                    return;
+                }
+                System.out.println(nowTime);
+                for (int i = 0; i < scheduleList.size(); i++) {
+                    if (nowTime.equals(scheduleList.getJSONObject(i).getString("time"))) {
+                        for (UserMessageHandler handler : LingYueStart.userHandlerHashMap.values()) {
+                            CommonUserHandler userHandler = (CommonUserHandler) handler;
+                            if (userHandler.thisUserObject.getBoolean("schedule"))
+                                OperationInterpreter.executeReply(scheduleList.getJSONObject(i).getString("message"), user);
+                        }
+                    }
+                }
+                pastTime[0] = nowTime;
+            }
+        }, 10, 1000 * 30);
     }
 
     @Override
@@ -72,12 +105,14 @@ public class CommonUserHandler extends UserMessageHandler {
             isFirstSpeak = false;
             return;
         }
-
+        if (userCheck(event))
+            return;
         try {
             orderHandle(event);
             writeReply(event);
             administratorOrderHandle(event);
         } catch (Exception e) {
+            e.printStackTrace();
             user.sendMessage("指令错误");
         }
 
@@ -130,6 +165,7 @@ public class CommonUserHandler extends UserMessageHandler {
         Message message = event.getMessage();
         String messageText = message.contentToString();
         String[] orderString = messageText.split(" ");
+        boolean done = false;
         if (!orderString[0].equals("LingYue")) {
             return;
         }
@@ -140,14 +176,27 @@ public class CommonUserHandler extends UserMessageHandler {
                     throw new Exception();
                 }
                 thisUserObject.put("gender", orderString[3]);
+                done = true;
             }
             if (orderString[2].equals("-isBUAAer")) {
                 if (!orderString[3].equals("true") && !orderString[3].equals("false")) {
                     throw new Exception();
                 }
                 thisUserObject.put("isBUAAer", Boolean.parseBoolean(orderString[3]));
+                done = true;
             }
         }
+        if (orderString[1].equals("-Config")) {
+            if (orderString[2].equals("-schedule")) {
+                if (!orderString[3].equals("true") && !orderString[3].equals("false")) {
+                    throw new Exception();
+                }
+                thisUserObject.put("schedule", Boolean.parseBoolean(orderString[3]));
+                done = true;
+            }
+        }
+        if (done)
+            user.sendMessage(thisUserObject.toString());
     }
 
     /**
@@ -169,12 +218,12 @@ public class CommonUserHandler extends UserMessageHandler {
         if (orderString[1].equals("-reload")) {
             switch (orderString[2]) {
                 case "-all":
-                    replyList = JsonLoader.jsonArrayLoader(rootPath + "reply.json", null);
+                    replyList = JsonLoader.jsonArrayLoader(rootPath + "reply.json");
                     userInfo = JsonLoader.jsonObjectLoader(rootPath + "userInfo.json");
                     done = true;
                     break;
                 case "-reply":
-                    replyList = JsonLoader.jsonArrayLoader(rootPath + "reply.json", null);
+                    replyList = JsonLoader.jsonArrayLoader(rootPath + "reply.json");
                     done = true;
                     break;
                 case "-user":
@@ -182,9 +231,37 @@ public class CommonUserHandler extends UserMessageHandler {
                     done = true;
                     break;
             }
-        }
-        if (orderString[1].equals("-save")) {
+        } else if (orderString[1].equals("-save")) {
             saveData();
+            done = true;
+        } else if (orderString[1].equals("-sendAll")) {
+            StringBuilder cache = new StringBuilder();
+            for (int i = 3; i < orderString.length; i++) {
+                cache.append(orderString[i]);
+            }
+            if (orderString[2].equals("-format")) {
+                for (UserMessageHandler handler : LingYueStart.userHandlerHashMap.values()) {
+                    CommonUserHandler userHandler = (CommonUserHandler) handler;
+                    OperationInterpreter.executeReply(cache.toString(), userHandler.user);
+                }
+            } else if (orderString[2].equals("-reTransAll")) {
+                userStatus.put("reTransAll", true);
+                user.sendMessage("已经进入转发模式");
+            } else
+                for (UserMessageHandler handler : LingYueStart.userHandlerHashMap.values()) {
+                    CommonUserHandler userHandler = (CommonUserHandler) handler;
+                    userHandler.user.sendMessage(orderString[2] + cache.toString());
+                }
+            done = true;
+        } else if (orderString[1].equals("-sendGroup")) {
+            StringBuilder cache = new StringBuilder();
+            for (int i = 3; i < orderString.length; i++) {
+                cache.append(orderString[i]);
+            }
+            if (orderString[2].equals("-format")) {
+                OperationInterpreter.executeReply(cache.toString(), LingYueStart.groupHandlerHashMap.get(717151707L).group);
+            } else
+                LingYueStart.groupHandlerHashMap.get(717151707L).group.sendMessage(orderString[2] + cache.toString());
             done = true;
         }
         if (done)
@@ -234,7 +311,7 @@ public class CommonUserHandler extends UserMessageHandler {
             boolean conditionSatisfied = false;
             int satisfiedNum = -1;
             for (int j = 0; j < replyObject.getJSONArray("condition").size(); j++) {
-                conditionSatisfied = ConditionInterpreter.getConditionSatisfied(replyObject.getJSONArray("condition"), 0, event);
+                conditionSatisfied = ConditionInterpreter.getConditionSatisfied(replyObject.getJSONArray("condition"), j, event);
                 if (conditionSatisfied) {
                     satisfiedNum = j;
                     break;
@@ -244,5 +321,23 @@ public class CommonUserHandler extends UserMessageHandler {
                 continue;
             OperationInterpreter.execute(replyObject, satisfiedNum, event);
         }
+    }
+
+    /**
+     * 用户状态检查
+     */
+    /* TODO: 用户状态检查 */
+    private boolean userCheck(UserMessageEvent event) {
+        Message message = event.getMessage();
+        String messageText = message.contentToString();
+        if ((boolean) userStatus.get("reTransAll")) {
+            for (UserMessageHandler handler : LingYueStart.userHandlerHashMap.values()) {
+                CommonUserHandler userHandler = (CommonUserHandler) handler;
+                userHandler.user.sendMessage(event.getMessage());
+                userStatus.put("reTransAll", false);
+            }
+            return true;
+        }
+        return false;
     }
 }

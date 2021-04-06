@@ -48,11 +48,11 @@ public abstract class Template_1 extends GroupMessageHandler {
     public void onLoad() throws Exception {
         /* TODO：json读取 */
         // 读取自动复读
-        repeatArray = JsonLoader.jsonArrayLoader(rootPath + groupName + "\\repeatList.json", this);
+        repeatArray = JsonLoader.jsonArrayLoader(rootPath + groupName + "\\repeatList.json");
         // 读取特殊语句回复
-        specialResponseArray = JsonLoader.jsonArrayLoader(rootPath + groupName + "\\specialRepeatList.json", this);
+        specialResponseArray = JsonLoader.jsonArrayLoader(rootPath + groupName + "\\specialRepeatList.json");
         // 读取用户信息
-        JSONArray userJsonArray = JsonLoader.jsonArrayLoader(rootPath + groupName + "\\user.json", this);
+        JSONArray userJsonArray = JsonLoader.jsonArrayLoader(rootPath + groupName + "\\user.json");
         for (int i = 0; i < userJsonArray.size(); i++) {
             JSONObject userObject = userJsonArray.getJSONObject(i);
             this.userArray.put(userObject.getLong("userID"),
@@ -66,7 +66,7 @@ public abstract class Template_1 extends GroupMessageHandler {
                     ));
         }
         // 读取定时任务列表
-        scheduleTaskArray = JsonLoader.jsonArrayLoader(rootPath + groupName + "\\scheduleTask.json", this);
+        scheduleTaskArray = JsonLoader.jsonArrayLoader(rootPath + groupName + "\\scheduleTask.json");
     }
 
     private void startSchedule() {

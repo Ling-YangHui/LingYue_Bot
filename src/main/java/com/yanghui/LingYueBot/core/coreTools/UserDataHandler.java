@@ -44,7 +44,7 @@ public class UserDataHandler {
         jsonWriter.flush();
         jsonWriter.close();
         // 开始校验文件是否合法写入
-        JSONArray array = JsonLoader.jsonArrayLoader(path + ".json", null);
+        JSONArray array = JsonLoader.jsonArrayLoader(path + ".json");
         if (!array.isEmpty()) {
             FileInputStream inputStream = new FileInputStream(path + ".json");
             FileOutputStream outputStream = new FileOutputStream(path);

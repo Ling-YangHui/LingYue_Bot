@@ -11,7 +11,7 @@ public class GetHeap {
 
     public static void main(String[] args) {
         try {
-            JSONArray userArray = JsonLoader.jsonArrayLoader("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\XiaoFangZhou\\user.json", null);
+            JSONArray userArray = JsonLoader.jsonArrayLoader("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\XiaoFangZhou\\user.json");
             Vector<JSONObject> userVector = new Vector<>();
             for (int i = 0; i < userArray.size(); i++) {
                 userVector.add(userArray.getJSONObject(i));

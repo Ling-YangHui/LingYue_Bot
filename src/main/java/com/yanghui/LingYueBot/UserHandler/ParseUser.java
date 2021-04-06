@@ -16,6 +16,9 @@ public class ParseUser {
         newUser.put("isBUAAer", false); // Bool
         newUser.put("gender", ""); // String
         newUser.put("valid", false); // Bool
+        newUser.put("schedule", true); // Bool
+        newUser.put("isAdministrator", false); // Bool
+        newUser.put("isSpecial", false); // Bool
         return newUser;
     }
 
