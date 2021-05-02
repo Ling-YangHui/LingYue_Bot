@@ -37,7 +37,7 @@ public class LingYueStart extends JavaPlugin {
         /* 监听登录事件 */
         Listener<?> loginListener = GlobalEventChannel.INSTANCE.subscribeAlways(BotOnlineEvent.class, botOnlineEvent -> {
             for (long groupID : groupHandlerHashMap.keySet()) {
-                groupHandlerHashMap.get(groupID).group = Bot.getInstance(3598326822L).getGroup(groupID);
+                groupHandlerHashMap.get(groupID).group = Bot.getInstances().get(0).getGroup(groupID);
                 System.out.println("成功加载群: " + groupID + " " + groupHandlerHashMap.get(groupID).group.getName());
             }
             for (String id : CommonUserHandler.userInfo.keySet()) {
@@ -64,6 +64,7 @@ public class LingYueStart extends JavaPlugin {
                 synchronized (userHandlerHashMap.get(userMessageEvent.getSubject().getId())) {
                     userHandlerHashMap.get(userMessageEvent.getSubject().getId()).onHandleMessage(userMessageEvent);
                 }
+
             } catch (Exception e) {
                 if (userHandlerHashMap.get(userMessageEvent.getSubject().getId()) == null) {
                     userHandlerHashMap.put(userMessageEvent.getSender().getId(), new CommonUserHandler(userMessageEvent.getSender()));

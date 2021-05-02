@@ -2,7 +2,6 @@ package com.yanghui.LingYueBot.core.codeInterpreter.conditionInterpreter;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.yanghui.LingYueBot.UserHandler.CommonUserHandler;
 import com.yanghui.LingYueBot.annotations.PoweredByMirai;
 import net.mamoe.mirai.event.events.MessageEvent;
 
@@ -15,10 +14,10 @@ class InputBuffer {
 
     public InputBuffer(String str) {
         str = str.replace(" ", "");
+        str = str.replace("_", " ");
         char[] inputString = str.toCharArray();
         for (int i = inputString.length - 1; i >= 0; i--) {
-            if (inputString[i] != ' ')
-                inputBuffer.push(inputString[i]);
+            inputBuffer.push(inputString[i]);
         }
     }
 
@@ -27,16 +26,13 @@ class InputBuffer {
     }
 
     @PoweredByMirai
-    public Node getNode(MessageEvent event) {
+    public Node getNode(MessageEvent event, JSONObject userInfo, JSONArray replyList, HashMap<String, Object> botStatus) {
         String senderID = Long.toString(event.getSender().getId());
         String messageContent = event.getMessage().contentToString();
         Node.NodeType nodeType;
         StringBuilder stringCacheBuilder;
         String stringCache;
         boolean value = false;
-        HashMap<String, Object> botStatus = CommonUserHandler.botStatus;
-        JSONObject userInfo = CommonUserHandler.userInfo;
-        JSONArray replyList = CommonUserHandler.replyList;
         char c = inputBuffer.pop();
 
         if (isSign(c)) {

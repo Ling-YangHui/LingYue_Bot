@@ -27,6 +27,7 @@ public class CommonUserHandler extends UserMessageHandler {
     public static HashMap<String, Object> botStatus = new HashMap<>();
     public static JSONArray replyList;
     public static JSONArray scheduleList;
+    public static JSONObject botConfig;
 
     /* 初始化静态代码块 */
     static {
@@ -34,6 +35,7 @@ public class CommonUserHandler extends UserMessageHandler {
             replyList = JsonLoader.jsonArrayLoader(rootPath + "reply.json");
             userInfo = JsonLoader.jsonObjectLoader(rootPath + "userInfo.json");
             scheduleList = JsonLoader.jsonArrayLoader(rootPath + "schedule.json");
+            botConfig = JsonLoader.jsonObjectLoader(rootPath + "botConfig.json");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -50,6 +52,11 @@ public class CommonUserHandler extends UserMessageHandler {
         this.user = Bot.getInstances().get(0).getFriend(id) == null ? Bot.getInstances().get(0).getStranger(id) : Bot.getInstances().get(0).getFriend(id);
         this.thisUserObject = userInfo.getJSONObject(this.id);
         this.userStatus.put("reTransAll", false);
+        try {
+            onCreate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public CommonUserHandler(User user) {
@@ -58,6 +65,11 @@ public class CommonUserHandler extends UserMessageHandler {
         addUser(user);
         this.thisUserObject = userInfo.getJSONObject(this.id);
         this.userStatus.put("reTransAll", false);
+        try {
+            onCreate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void addUser(User user) {
@@ -81,14 +93,9 @@ public class CommonUserHandler extends UserMessageHandler {
                 if (nowTime.equals(pastTime[0])) {
                     return;
                 }
-                System.out.println(nowTime);
                 for (int i = 0; i < scheduleList.size(); i++) {
                     if (nowTime.equals(scheduleList.getJSONObject(i).getString("time"))) {
-                        for (UserMessageHandler handler : LingYueStart.userHandlerHashMap.values()) {
-                            CommonUserHandler userHandler = (CommonUserHandler) handler;
-                            if (userHandler.thisUserObject.getBoolean("schedule"))
-                                OperationInterpreter.executeReply(scheduleList.getJSONObject(i).getString("message"), user);
-                        }
+                        OperationInterpreter.executeReply(scheduleList.getJSONObject(i).getString("message"), user);
                     }
                 }
                 pastTime[0] = nowTime;
@@ -98,8 +105,6 @@ public class CommonUserHandler extends UserMessageHandler {
 
     @Override
     public void onHandleMessage(UserMessageEvent event) {
-        Message message = event.getMessage();
-        String messageText = message.contentToString();
         if (!thisUserObject.getBoolean("valid")) {
             register(event);
             isFirstSpeak = false;
@@ -250,7 +255,7 @@ public class CommonUserHandler extends UserMessageHandler {
             } else
                 for (UserMessageHandler handler : LingYueStart.userHandlerHashMap.values()) {
                     CommonUserHandler userHandler = (CommonUserHandler) handler;
-                    userHandler.user.sendMessage(orderString[2] + cache.toString());
+                    userHandler.user.sendMessage(orderString[2] + cache);
                 }
             done = true;
         } else if (orderString[1].equals("-sendGroup")) {
@@ -261,7 +266,7 @@ public class CommonUserHandler extends UserMessageHandler {
             if (orderString[2].equals("-format")) {
                 OperationInterpreter.executeReply(cache.toString(), LingYueStart.groupHandlerHashMap.get(717151707L).group);
             } else
-                LingYueStart.groupHandlerHashMap.get(717151707L).group.sendMessage(orderString[2] + cache.toString());
+                LingYueStart.groupHandlerHashMap.get(717151707L).group.sendMessage(orderString[2] + cache);
             done = true;
         }
         if (done)
@@ -319,7 +324,7 @@ public class CommonUserHandler extends UserMessageHandler {
             }
             if (!conditionSatisfied)
                 continue;
-            OperationInterpreter.execute(replyObject, satisfiedNum, event);
+            OperationInterpreter.execute(replyObject, satisfiedNum, event, null);
         }
     }
 
@@ -328,8 +333,6 @@ public class CommonUserHandler extends UserMessageHandler {
      */
     /* TODO: 用户状态检查 */
     private boolean userCheck(UserMessageEvent event) {
-        Message message = event.getMessage();
-        String messageText = message.contentToString();
         if ((boolean) userStatus.get("reTransAll")) {
             for (UserMessageHandler handler : LingYueStart.userHandlerHashMap.values()) {
                 CommonUserHandler userHandler = (CommonUserHandler) handler;
