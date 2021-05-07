@@ -31,10 +31,12 @@ public class DriftBottle {
 
     public JSONObject getDriftBottle() {
         int len = driftBottleArray.size();
+        if (len == 0)
+            return null;
         JSONObject result = driftBottleArray.getJSONObject(new Random().nextInt(len));
         synchronized (driftBottleArray) {
             result.put("pick", result.getIntValue("pick") + 1);
-            if (result.getIntValue("pick") > 3)
+            if (result.getIntValue("pick") >= 2)
                 driftBottleArray.remove(result);
         }
         return result;
@@ -55,6 +57,10 @@ public class DriftBottle {
 
     public void saveDriftBottle(String path) throws Exception {
         JsonLoader.saveJSONArray(path, driftBottleArray);
+    }
+
+    public int getBottleNum() {
+        return this.driftBottleArray.size();
     }
 
 }

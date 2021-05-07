@@ -2,13 +2,16 @@
 
 ## 简介
 
-当前版本 Version 1.0.0-RC
+当前版本 Version 2.1.1-RC
 
 这是一个使用[Mirai](https://github.com/mamoe/mirai) 框架搭建的小型QQ群bot项目，当前支持自动回复、好感度（数值系统）、自动复读、特殊成员以及一定的管理员操作能力，具体的操作方法见下文。
 
 本项目由[YangHui](https://github.com/Ling-YangHui) 管理构建。
 
 ## 新特性一览
+
+版本 V2.1.1-RC Update 508\
+漂流瓶的捡起的次数有限制了
 
 版本 V2.1.0-RC Update 502\
 支持了漂流瓶，让漂流瓶带着你的思绪去找到那个陌生人吧！
@@ -90,28 +93,7 @@
 
 含义很清楚，不再赘述
 
-## 版本日志
-
-2020/5/2 &emsp; 2.1.0-RC: 漂流瓶功能上线，旧代码适配新核心完成
-
-2020/3/31 &emsp; 2.0.0-Alpha: 新的回复执行核心，数据结构重构
-
-2021/3/19 &emsp; 1.3.0-Alpha：添加了从本地和网络获取图片并发送的功能。
-
-2021/3/18 &emsp; 1.2.0-Alpha：添加了消息链回复的功能。可以回复表情，at别人。
-
-2021/3/17 &emsp; 1.1.0-Alpha：添加了定时的功能，但是定时的方式和触发方法不太友好
-
-2021/3/17 &emsp; 1.0.0-RC：具备了Bot的基本功能
-
-## 版权信息
-
-CopyRight (2020-?) @YangHui · BUAA\
-YangHui, LingDong &emsp;&emsp;&emsp;IceData 凌月开发组
-
-本项目基于[Mirai](https://github.com/mamoe/mirai) 框架搭建
-
-## 新回复定义核心
+### 新回复定义核心
 
 新的回复定义即将开始使用！
 
@@ -167,3 +149,27 @@ API:
 **操作内容：**
 
 由LingYue开发组提供API
+
+## 版本日志
+
+2020/5/8 &emsp; 2.1.1-RC: 漂流瓶拾起次数限制
+
+2020/5/2 &emsp; 2.1.0-RC: 漂流瓶功能上线，旧代码适配新核心完成
+
+2020/3/31 &emsp; 2.0.0-Alpha: 新的回复执行核心，数据结构重构
+
+2021/3/19 &emsp; 1.3.0-Alpha：添加了从本地和网络获取图片并发送的功能。
+
+2021/3/18 &emsp; 1.2.0-Alpha：添加了消息链回复的功能。可以回复表情，at别人。
+
+2021/3/17 &emsp; 1.1.0-Alpha：添加了定时的功能，但是定时的方式和触发方法不太友好
+
+2021/3/17 &emsp; 1.0.0-RC：具备了Bot的基本功能
+
+## 版权信息
+
+CopyRight (2020-?) @YangHui · BUAA\
+YangHui, LingDong &emsp;&emsp;&emsp;IceData 凌月开发组
+
+本项目基于[Mirai](https://github.com/mamoe/mirai) 框架搭建
+

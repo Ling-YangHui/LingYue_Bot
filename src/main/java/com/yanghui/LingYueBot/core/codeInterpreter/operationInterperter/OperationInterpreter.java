@@ -135,9 +135,12 @@ public class OperationInterpreter {
             switch (instructionList[1]) {
                 case "-GET":
                     JSONObject driftBottle = ((DriftBottle) functionMap.get("DriftBottle")).getDriftBottle();
+                    if (driftBottle == null) {
+                        contact.sendMessage("这片海里，什么都没有呢");
+                    }
                     long day, hour, minute;
                     try {
-                        long sendTime = new SimpleDateFormat("yyyy-MM-dd hh:mm").parse(driftBottle.getString("sendTime")).getTime();
+                        long sendTime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(driftBottle.getString("sendTime")).getTime();
                         long nowTime = new Date().getTime();
                         long timeSpace = nowTime - sendTime;
                         day = timeSpace / 1000 / 3600 / 24;
@@ -157,7 +160,7 @@ public class OperationInterpreter {
                     driftBottle.put("message", event.getMessage().contentToString().replace("@3598326822 丢瓶子", ""));
                     driftBottle.put("sender", event.getSenderName());
                     driftBottle.put("pick", 0);
-                    driftBottle.put("sendTime", new SimpleDateFormat("yyyy-MM-dd hh:mm").format(new Date()));
+                    driftBottle.put("sendTime", new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()));
                     if (!event.getMessage().contentToString().replace("@3598326822 丢瓶子", "").trim().isEmpty())
                         ((DriftBottle) functionMap.get("DriftBottle")).addDriftBottle(driftBottle);
                     break;

@@ -60,6 +60,12 @@ public class XiaoFangZhou extends GroupMessageHandler {
                 if (nowTime.equals(pastTime[0])) {
                     return;
                 }
+                try {
+                    onDelete();
+                    onLoad();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 for (int i = 0; i < scheduleTaskList.size(); i++) {
                     if (nowTime.equals(scheduleTaskList.getJSONObject(i).getString("time"))) {
                         if (group != null) {
@@ -172,6 +178,9 @@ public class XiaoFangZhou extends GroupMessageHandler {
                         str.append(key).append(": ").append(configList.get(key)).append('\n');
                     }
                     group.sendMessage(str.toString());
+                    break;
+                case "LingYue -getBottle":
+                    group.sendMessage("海里还有" + driftBottle.getBottleNum() + "个瓶子");
                     break;
                 case "LingYue -close":
                     configList.put("OnActive", false);
