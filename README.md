@@ -10,14 +10,14 @@
 
 ## 新特性一览
 
+版本 V2.1.2-RC Update 512\
+添加了跨群漂流瓶，请谨言慎行哦！
+
 版本 V2.1.1-RC Update 508\
 漂流瓶的捡起的次数有限制了
 
 版本 V2.1.0-RC Update 502\
 支持了漂流瓶，让漂流瓶带着你的思绪去找到那个陌生人吧！
-
-版本 V2.0.0-Alpha Update 331\
-支持了更加强大的回复定义！具体内容见下方
 
 ## 插件功能及使用方法
 
@@ -152,6 +152,8 @@ API:
 
 ## 版本日志
 
+2020/5/12 &emsp; 2.1.2-RC: 跨群漂流瓶功能上线
+
 2020/5/8 &emsp; 2.1.1-RC: 漂流瓶拾起次数限制
 
 2020/5/2 &emsp; 2.1.0-RC: 漂流瓶功能上线，旧代码适配新核心完成
@@ -168,8 +170,8 @@ API:
 
 ## 版权信息
 
-CopyRight (2020-?) @YangHui · BUAA\
-YangHui, LingDong &emsp;&emsp;&emsp;IceData 凌月开发组
+CopyRight (2020-?) @YangHui · BUAA &emsp; @LingDong · SEU\
+YangHui, LingDong &emsp;&emsp;IceData 凌月开发组
 
 本项目基于[Mirai](https://github.com/mamoe/mirai) 框架搭建
 

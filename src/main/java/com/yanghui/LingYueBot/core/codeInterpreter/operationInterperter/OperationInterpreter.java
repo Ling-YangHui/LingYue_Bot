@@ -134,7 +134,11 @@ public class OperationInterpreter {
         if (instructionList[0].equals("DriftBottle")) {
             switch (instructionList[1]) {
                 case "-GET":
-                    JSONObject driftBottle = ((DriftBottle) functionMap.get("DriftBottle")).getDriftBottle();
+                    JSONObject driftBottle = null;
+                    if (instructionList[2].equals("Local"))
+                        driftBottle = ((DriftBottle) functionMap.get("DriftBottle")).getDriftBottle();
+                    else if (instructionList[2].equals("Global"))
+                        driftBottle = DriftBottle.getDriftBottleFromAll();
                     if (driftBottle == null) {
                         contact.sendMessage("这片海里，什么都没有呢");
                     }
@@ -157,12 +161,18 @@ public class OperationInterpreter {
                     break;
                 case "-ADD":
                     driftBottle = new JSONObject();
-                    driftBottle.put("message", event.getMessage().contentToString().replace("@3598326822 丢瓶子", ""));
                     driftBottle.put("sender", event.getSenderName());
                     driftBottle.put("pick", 0);
                     driftBottle.put("sendTime", new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()));
-                    if (!event.getMessage().contentToString().replace("@3598326822 丢瓶子", "").trim().isEmpty())
+                    if (instructionList[2].equals("Local")) {
+                        if (!event.getMessage().contentToString().replace("@3598326822 丢瓶子", "").trim().isEmpty())
+                            driftBottle.put("message", event.getMessage().contentToString().replace("@3598326822 丢瓶子", ""));
                         ((DriftBottle) functionMap.get("DriftBottle")).addDriftBottle(driftBottle);
+                    } else if (instructionList[2].equals("Global")) {
+                        driftBottle.put("message", event.getMessage().contentToString().replace("@3598326822 丢大瓶子", ""));
+                        if (!event.getMessage().contentToString().replace("@3598326822 丢大瓶子", "").trim().isEmpty())
+                            DriftBottle.addDriftBottleToAll(driftBottle);
+                    }
                     break;
             }
 
