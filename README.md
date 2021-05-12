@@ -2,7 +2,7 @@
 
 ## 简介
 
-当前版本 Version 2.1.1-RC
+当前版本 Version 2.1.2-RC
 
 这是一个使用[Mirai](https://github.com/mamoe/mirai) 框架搭建的小型QQ群bot项目，当前支持自动回复、好感度（数值系统）、自动复读、特殊成员以及一定的管理员操作能力，具体的操作方法见下文。
 
