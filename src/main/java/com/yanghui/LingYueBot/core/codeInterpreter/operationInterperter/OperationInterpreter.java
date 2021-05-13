@@ -3,6 +3,8 @@ package com.yanghui.LingYueBot.core.codeInterpreter.operationInterperter;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.yanghui.LingYueBot.UserHandler.CommonUserHandler;
+import com.yanghui.LingYueBot.functions.ArknightsRandCard;
+import com.yanghui.LingYueBot.functions.BalanceChemistry;
 import com.yanghui.LingYueBot.functions.DriftBottle;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.events.MessageEvent;
@@ -175,7 +177,34 @@ public class OperationInterpreter {
                     }
                     break;
             }
-
+        }
+        if (instructionList[0].equals("Balance")) {
+            String messageContent = event.getMessage().contentToString();
+            messageContent = messageContent.replace("@3598326822 配平 ", "");
+            if (!messageContent.isEmpty()) {
+                try {
+                    String result = BalanceChemistry.balanceChemistry(messageContent);
+                    contact.sendMessage(result);
+                } catch (Exception e) {
+                    contact.sendMessage("出错了！");
+                }
+            }
+        }
+        if (instructionList[0].equals("RandCard")) {
+            String messageContent = event.getMessage().contentToString();
+            messageContent = messageContent.replace("@3598326822 抽卡 ", "");
+            int randNum;
+            try {
+                randNum = Integer.parseInt(messageContent);
+                Vector<Vector<String>> result = ArknightsRandCard.rand(randNum);
+                response.add(new At(event.getSender().getId()));
+                response.add(new PlainText("抽卡结果为\n" + result.get(0) + "\n出货六星为:\n" + result.get(1)));
+                contact.sendMessage(response.asMessageChain());
+            } catch (Exception e) {
+                response.add(new At(event.getSender().getId()));
+                response.add("发生错误了，请检查格式或者抽卡数量");
+                contact.sendMessage(response.asMessageChain());
+            }
         }
     }
 }

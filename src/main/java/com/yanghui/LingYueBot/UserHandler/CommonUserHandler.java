@@ -77,7 +77,7 @@ public class CommonUserHandler extends UserMessageHandler {
     }
 
     public static void saveData() throws IOException {
-        JsonLoader.saveJSONObject(rootPath + "userInfo.json", userInfo);
+        JsonLoader.saveJSONObject(rootPath, "userInfo.json", userInfo);
     }
 
     @Override

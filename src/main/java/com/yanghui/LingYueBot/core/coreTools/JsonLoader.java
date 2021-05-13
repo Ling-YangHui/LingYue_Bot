@@ -29,15 +29,16 @@ public class JsonLoader {
         return JSON.parseObject(fileContent.toString());
     }
 
-    public static void saveJSONObject(String path, JSON json) throws IOException {
-        Writer jsonWriter = new OutputStreamWriter(new FileOutputStream(path + ".json"), StandardCharsets.UTF_8);
+    public static void saveJSONObject(String rootPath, String name, JSON json) throws IOException {
+        String path = rootPath + name;
+        Writer jsonWriter = new OutputStreamWriter(new FileOutputStream(rootPath + "cache\\" + name + ".json"), StandardCharsets.UTF_8);
         jsonWriter.write(json.toJSONString());
         jsonWriter.flush();
         jsonWriter.close();
         // 开始校验文件是否合法写入
-        JSONObject array = JsonLoader.jsonObjectLoader(path + ".json");
+        JSONObject array = JsonLoader.jsonObjectLoader(rootPath + "cache\\" + name + ".json");
         if (!array.isEmpty()) {
-            FileInputStream inputStream = new FileInputStream(path + ".json");
+            FileInputStream inputStream = new FileInputStream(rootPath + "cache\\" + name + ".json");
             FileOutputStream outputStream = new FileOutputStream(path);
             byte[] buf = new byte[1024];
             int bytesRead;
@@ -49,15 +50,16 @@ public class JsonLoader {
         }
     }
 
-    public static void saveJSONArray(String path, JSON json) throws IOException {
-        Writer jsonWriter = new OutputStreamWriter(new FileOutputStream(path + ".json"), StandardCharsets.UTF_8);
+    public static void saveJSONArray(String rootPath, String name, JSON json) throws IOException {
+        String path = rootPath + name;
+        Writer jsonWriter = new OutputStreamWriter(new FileOutputStream(rootPath + "cache\\" + name + ".json"), StandardCharsets.UTF_8);
         jsonWriter.write(json.toJSONString());
         jsonWriter.flush();
         jsonWriter.close();
         // 开始校验文件是否合法写入
-        JSONArray array = JsonLoader.jsonArrayLoader(path + ".json");
+        JSONArray array = JsonLoader.jsonArrayLoader(rootPath + "cache\\" + name + ".json");
         if (!array.isEmpty()) {
-            FileInputStream inputStream = new FileInputStream(path + ".json");
+            FileInputStream inputStream = new FileInputStream(rootPath + "cache\\" + name + ".json");
             FileOutputStream outputStream = new FileOutputStream(path);
             byte[] buf = new byte[1024];
             int bytesRead;

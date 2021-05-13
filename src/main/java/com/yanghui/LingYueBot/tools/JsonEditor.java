@@ -17,7 +17,7 @@ public class JsonEditor {
                 JSONObject object = jsonArray.getJSONObject(i);
                 object.remove("sendTime");
             }
-            JsonLoader.saveJSONArray(rootPath, jsonArray);
+//            JsonLoader.saveJSONArray(rootPath, jsonArray);
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -10,7 +10,9 @@ import java.util.*;
 
 public class DriftBottle {
 
-    private static final String path = "D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\driftBottle.json";
+    private static final String rootPath = "D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\";
+    private static final String name = "driftBottle.json";
+    private static final String path = rootPath + name;
     public static JSONArray driftBottleArrayAcrossGroup;
 
     static {
@@ -88,7 +90,7 @@ public class DriftBottle {
     }
 
     public static void saveDriftBottleFromAll() throws Exception {
-        JsonLoader.saveJSONArray(path, driftBottleArrayAcrossGroup);
+        JsonLoader.saveJSONArray(rootPath, name, driftBottleArrayAcrossGroup);
     }
 
     public static int getBottleNumFromAll() {
@@ -135,8 +137,8 @@ public class DriftBottle {
         return remove;
     }
 
-    public void saveDriftBottle(String path) throws Exception {
-        JsonLoader.saveJSONArray(path, driftBottleArray);
+    public void saveDriftBottle(String rootPath, String name) throws Exception {
+        JsonLoader.saveJSONArray(rootPath, name, driftBottleArray);
     }
 
     public int getBottleNum() {
