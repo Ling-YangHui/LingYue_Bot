@@ -19,16 +19,11 @@ public class SendSexPictures {
      *
      * @param contact 发送的对象
      */
-    public static void sendSexPicturesFromInternet(Contact contact) {
-        try {
-            URL site = new URL("https://api.dongmanxingkong.com/suijitupian/acg/1080p/index.php");
-            URLConnection con = site.openConnection();
-            con.setConnectTimeout(5000);
-            InputStream inputStream = con.getInputStream();
-            Contact.Companion.sendImage(contact, inputStream, "jpg");
-        } catch (Exception e) {
-            System.err.println("下载图片错误");
-            e.printStackTrace();
-        }
+    public static void sendSexPicturesFromInternet(Contact contact) throws Exception {
+        URL site = new URL("https://api.dongmanxingkong.com/suijitupian/acg/1080p/index.php");
+        URLConnection con = site.openConnection();
+        con.setConnectTimeout(5000);
+        InputStream inputStream = con.getInputStream();
+        Contact.Companion.sendImage(contact, inputStream, "jpg");
     }
 }

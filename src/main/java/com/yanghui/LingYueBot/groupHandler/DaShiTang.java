@@ -2,9 +2,9 @@ package com.yanghui.LingYueBot.groupHandler;
 
 import com.yanghui.LingYueBot.Template.GroupHandler;
 
-public class BeiShiCheDui extends GroupHandler {
+public class DaShiTang extends GroupHandler {
 
-    public BeiShiCheDui(String path) {
+    public DaShiTang(String path) {
         super(path);
     }
 }

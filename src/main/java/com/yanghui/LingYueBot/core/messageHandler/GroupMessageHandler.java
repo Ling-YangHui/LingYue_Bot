@@ -10,6 +10,10 @@ import java.util.HashMap;
 
 public abstract class GroupMessageHandler {
 
+    public GroupMessageHandler(String str) {
+        rootPath = str;
+    }
+
     public Group group = null;
     // Bot设置状态
     public final HashMap<String, Object> configList = new HashMap<>();

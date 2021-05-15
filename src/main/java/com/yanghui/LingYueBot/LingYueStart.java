@@ -5,6 +5,7 @@ import com.yanghui.LingYueBot.core.messageHandler.GroupMessageHandler;
 import com.yanghui.LingYueBot.core.messageHandler.UserMessageHandler;
 import com.yanghui.LingYueBot.groupHandler.BeiShiCheDui;
 import com.yanghui.LingYueBot.groupHandler.BingShuJu;
+import com.yanghui.LingYueBot.groupHandler.DaShiTang;
 import com.yanghui.LingYueBot.groupHandler.XiaoFangZhou;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.console.extension.PluginComponentStorage;
@@ -81,9 +82,10 @@ public class LingYueStart extends JavaPlugin {
     public void onLoad(@NotNull PluginComponentStorage $this$onLoad) {
         /* TODO: 这里写不同消息对象的初始化事件 */
         // 初始化事件handler
-        groupHandlerHashMap.put(717151707L, new XiaoFangZhou("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\XiaoFangZhou\\"));
-        groupHandlerHashMap.put(1121098457L, new BeiShiCheDui());
-        groupHandlerHashMap.put(904280379L, new BingShuJu("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\BingShuJu\\"));
+        groupHandlerHashMap.put(717151707L, new XiaoFangZhou("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\Group\\XiaoFangZhou\\"));
+        groupHandlerHashMap.put(1121098457L, new BeiShiCheDui("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\Group\\BeiShiCheDui\\"));
+        groupHandlerHashMap.put(904280379L, new BingShuJu("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\Group\\BingShuJu\\"));
+        groupHandlerHashMap.put(541674751L, new DaShiTang("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\Group\\DaShiTang\\"));
         for (GroupMessageHandler handler : groupHandlerHashMap.values()) {
             try {
                 handler.onCreate();

@@ -3,9 +3,7 @@ package com.yanghui.LingYueBot.core.codeInterpreter.operationInterperter;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.yanghui.LingYueBot.UserHandler.CommonUserHandler;
-import com.yanghui.LingYueBot.functions.ArknightsRandCard;
-import com.yanghui.LingYueBot.functions.BalanceChemistry;
-import com.yanghui.LingYueBot.functions.DriftBottle;
+import com.yanghui.LingYueBot.functions.*;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.data.At;
@@ -13,7 +11,7 @@ import net.mamoe.mirai.message.data.Face;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import net.mamoe.mirai.message.data.PlainText;
 
-import java.text.ParseException;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -41,6 +39,7 @@ public class OperationInterpreter {
         if (!conditionList.get(3).isEmpty()) {
             String[] operationStrList = conditionList.get(3).split(",");
             for (String s : operationStrList) {
+                s = s.trim();
                 executeOperation(operation.getString(Integer.parseInt(s)), event, contact, userObject, FunctionMap);
             }
         }
@@ -74,7 +73,9 @@ public class OperationInterpreter {
             for (String replyItem : reply) {
                 replyItem = replyItem.trim();
                 if (replyItem.startsWith("TEXT:")) {
-                    builder.add(new PlainText(replyItem.substring(5)));
+                    String text = replyItem.substring(5);
+                    text = text.replace("\\n", "\n");
+                    builder.add(new PlainText(text));
                 }
                 if (replyItem.startsWith("FACE:")) {
                     builder.add(new Face(Integer.parseInt(replyItem.substring(5))));
@@ -89,7 +90,8 @@ public class OperationInterpreter {
 
     public static void executeOperation(String operation, MessageEvent event, Contact contact, JSONObject userObject, HashMap<String, Object> functionMap) {
         String[] instructionList = operation.split(" ");
-        MessageChainBuilder response = new MessageChainBuilder(16);
+        MessageChainBuilder response = new MessageChainBuilder(128);
+        /* TODO: 好感变化*/
         if (instructionList[0].equals("Like")) {
             // 表示好感度变化
             int movingLimit = 5;
@@ -114,6 +116,7 @@ public class OperationInterpreter {
             }
             userObject.put("like", userObject.getIntValue("like") + movingNum);
         }
+        /* TODO: 获取数值 */
         if (instructionList[0].equals("Get")) {
             switch (instructionList[1]) {
                 case "-Like":
@@ -133,6 +136,7 @@ public class OperationInterpreter {
                     break;
             }
         }
+        /* TODO: 漂流瓶 */
         if (instructionList[0].equals("DriftBottle")) {
             switch (instructionList[1]) {
                 case "-GET":
@@ -146,13 +150,14 @@ public class OperationInterpreter {
                     }
                     long day, hour, minute;
                     try {
+                        assert driftBottle != null;
                         long sendTime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(driftBottle.getString("sendTime")).getTime();
                         long nowTime = new Date().getTime();
                         long timeSpace = nowTime - sendTime;
                         day = timeSpace / 1000 / 3600 / 24;
                         hour = (timeSpace % (1000 * 3600 * 24)) / (1000 * 3600);
                         minute = (timeSpace % (1000 * 3600)) / (1000 * 60);
-                    } catch (ParseException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                         break;
                     }
@@ -178,6 +183,7 @@ public class OperationInterpreter {
                     break;
             }
         }
+        /* TODO: 化学式配平 */
         if (instructionList[0].equals("Balance")) {
             String messageContent = event.getMessage().contentToString();
             messageContent = messageContent.replace("@3598326822 配平 ", "");
@@ -190,6 +196,7 @@ public class OperationInterpreter {
                 }
             }
         }
+        /* TODO: 抽卡 */
         if (instructionList[0].equals("RandCard")) {
             String messageContent = event.getMessage().contentToString();
             messageContent = messageContent.replace("@3598326822 抽卡 ", "");
@@ -198,7 +205,19 @@ public class OperationInterpreter {
                 randNum = Integer.parseInt(messageContent);
                 Vector<Vector<String>> result = ArknightsRandCard.rand(randNum);
                 response.add(new At(event.getSender().getId()));
-                response.add(new PlainText("抽卡结果为\n" + result.get(0) + "\n出货六星为:\n" + result.get(1)));
+
+                if (randNum <= 20)
+                    response.add(new PlainText("抽卡结果为\n六星:\n" + result.get(1) + "\n五星:" + result.get(2) + "\n四星:" + result.get(3) + "\n三星:" + result.get(4)));
+                else
+                    response.add(new PlainText("抽卡结果为\n六星:\n" + result.get(1) + "\n五星:" + result.get(2) + "\n四星:" + result.get(3).size() + "个\n三星:" + result.get(4).size() + "个"));
+
+                int i = 1;
+                for (String name : result.get(0)) {
+                    if (ArknightsRandCard.isSixStar(name)) {
+                        response.add(new PlainText("\n在第" + i + "个抽到六星: " + name));
+                    }
+                    i++;
+                }
                 contact.sendMessage(response.asMessageChain());
             } catch (Exception e) {
                 response.add(new At(event.getSender().getId()));
@@ -206,5 +225,25 @@ public class OperationInterpreter {
                 contact.sendMessage(response.asMessageChain());
             }
         }
+        /* TODO: 卫星测控 */
+        if (instructionList[0].equals("Satellite")) {
+            response.add(new At(event.getSender().getId()));
+            try {
+                response.add(new PlainText("\n" + SatelliteGetPosition.satelliteGetPosition(instructionList[1])));
+            } catch (IOException e) {
+                response.add(new PlainText("\n发生错误了"));
+            }
+            contact.sendMessage(response.asMessageChain());
+        }
+        /* TODO: 萌萌的图片 */
+        if (instructionList[0].equals("MoePic")) {
+            try {
+                SendSexPictures.sendSexPicturesFromInternet(contact);
+            } catch (Exception e) {
+                contact.sendMessage("图片下载错误");
+            }
+        }
+        /* TODO: 我他妈的好想和
+         *           草海龙做爱啊*/
     }
 }

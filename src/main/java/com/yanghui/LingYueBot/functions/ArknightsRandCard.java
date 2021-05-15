@@ -6,13 +6,13 @@ import java.util.Vector;
 
 public class ArknightsRandCard {
 
-    private static final String[] sixArray = {"棘刺", "铃兰", "早露", "温蒂", "傀影", "风笛", "刻俄柏", "阿", "煌", "莫斯提马", "麦哲伦", "赫拉格", "黑", "陈", "斯卡蒂", "银灰", "塞雷娅", "星熊", "夜莺", "闪灵", "安洁莉娜", "艾雅法拉", "伊芙利特", "推进之王", "能天使", "森蚺", "史尔特尔", "瑕光", "泥岩", "山", "空弦", "W", "凯尔希", "浊心斯卡蒂", "刻俄柏", "异客"};
+    private static final String[] sixArray = {"棘刺", "铃兰", "早露", "温蒂", "傀影", "风笛", "刻俄柏", "阿", "煌", "莫斯提马", "麦哲伦", "赫拉格", "黑", "陈", "斯卡蒂", "银灰", "塞雷娅", "星熊", "夜莺", "闪灵", "安洁莉娜", "艾雅法拉", "伊芙利特", "推进之王", "能天使", "森蚺", "史尔特尔", "瑕光", "泥岩", "山", "空弦", "凯尔希", "刻俄柏", "异客"};
     private static final String[] fiveArray = {"安哲拉", "贾维", "蜜蜡", "断崖", "莱恩哈特", "月禾", "石棉", "极境", "巫恋", "慑砂", "惊蛰", "吽", "灰喉", "布洛卡", "苇草", "槐琥", "送葬人", "星极", "格劳克斯", "诗怀雅", "夜魔", "食铁兽", "狮蝎", "空", "真理", "初雪", "崖心", "守林人", "普罗旺斯", "可颂", "雷蛇", "红", "临光", "华法琳", "赫默", "梅尔", "天火", "陨星", "白金", "蓝毒", "幽灵鲨", "拉普兰德", "芙兰卡", "德克萨斯", "凛冬", "白面鸮", "燧石", "四月", "奥斯塔", "絮雨", "卡夫卡", "爱丽丝"};
     private static final String[] fourArray = {"孑", "卡达", "波登可", "刻刀", "宴", "安比尔", "梅", "红云", "桃金娘", "苏苏洛", "格雷伊", "猎蜂", "阿消", "地灵", "深海色", "古米", "蛇屠箱", "角峰", "调香师", "嘉维尔", "末药", "暗索", "砾", "慕斯", "霜叶", "缠丸", "杜宾", "红豆", "清道夫", "讯使", "白雪", "流星", "杰西卡", "远山", "夜烟", "酸糖", "芳汀", "泡泡", "杰克", "松果", "豆苗"};
     private static final String[] threeArray = {"斑点", "泡普卡", "月见夜", "空爆", "梓兰", "史都华德", "安塞尔", "芙蓉", "炎熔", "安德切尔", "克洛斯", "米格鲁", "卡缇", "梅兰莎", "翎羽", "香草", "芬"};
-    private static final String[] upSixArray = {"浊心斯卡蒂", "凯尔希"};
-    private static final String[] upFiveArray = {};
-    private static final String[] priorityArray = {"W"};
+    private static final String[] upSixArray = {"森蚺", "阿"};
+    private static final String[] upFiveArray = {"白面鸮", "真理", "蓝毒"};
+    private static final String[] priorityArray = {};
 
     private static final Vector<String> six = new Vector<>();
     private static final Vector<String> five = new Vector<>();
@@ -44,6 +44,9 @@ public class ArknightsRandCard {
         Vector<Vector<String>> result = new Vector<>();
         Vector<String> allResult = new Vector<>();
         Vector<String> sixResult = new Vector<>();
+        Vector<String> fiveResult = new Vector<>();
+        Vector<String> fourResult = new Vector<>();
+        Vector<String> threeResult = new Vector<>();
         int noSixNum = 0;
         for (int i = 0; i < num; i++) {
             String name = randOne(possibility);
@@ -56,7 +59,18 @@ public class ArknightsRandCard {
                 sixResult.add(name);
             } else
                 noSixNum++;
-
+            int star = getStar(name);
+            switch (star) {
+                case 5:
+                    fiveResult.add(name);
+                    break;
+                case 4:
+                    fourResult.add(name);
+                    break;
+                case 3:
+                    threeResult.add(name);
+                    break;
+            }
             if (noSixNum > 50)
                 for (int j = 0; j < 4; j++) {
                     possibility[j] += 0.02;
@@ -65,6 +79,9 @@ public class ArknightsRandCard {
         }
         result.add(allResult);
         result.add(sixResult);
+        result.add(fiveResult);
+        result.add(fourResult);
+        result.add(threeResult);
         return result;
     }
 
@@ -110,7 +127,17 @@ public class ArknightsRandCard {
         }
     }
 
-    private static boolean isSixStar(String name) {
+    public static boolean isSixStar(String name) {
         return upSix.contains(name) || priority.contains(name) || six.contains(name);
+    }
+
+    private static int getStar(String name) {
+        if (isSixStar(name))
+            return 6;
+        if (upFive.contains(name) || five.contains(name))
+            return 5;
+        if (four.contains(name))
+            return 4;
+        return 3;
     }
 }
