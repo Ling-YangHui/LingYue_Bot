@@ -37,8 +37,8 @@ public class ArknightsRandCard {
         six.removeAll(priority);
     }
 
-    public static Vector<Vector<String>> rand(int num) throws Exception {
-        double[] possibility = {0.02, 0.1, 0.6, 1};
+    public static Vector<Vector<String>> rand(int num, double treat) throws Exception {
+        double[] possibility = {0.02 + treat, 0.1 + treat, 0.6 + treat, 1 + treat};
         if (num > 100 || num <= 0)
             throw new Exception();
         Vector<Vector<String>> result = new Vector<>();

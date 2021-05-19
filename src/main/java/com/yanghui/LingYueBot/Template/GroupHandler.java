@@ -8,6 +8,7 @@ import com.yanghui.LingYueBot.core.codeInterpreter.operationInterperter.Operatio
 import com.yanghui.LingYueBot.core.coreTools.JsonLoader;
 import com.yanghui.LingYueBot.core.messageHandler.GroupMessageHandler;
 import com.yanghui.LingYueBot.functions.DriftBottle;
+import com.yanghui.LingYueBot.functions.GetSystemInfo;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
@@ -16,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Vector;
 
 public class GroupHandler extends GroupMessageHandler {
     // 图片路径
@@ -70,7 +72,8 @@ public class GroupHandler extends GroupMessageHandler {
         String messageContent = event.getMessage().contentToString();
         group = event.getGroup();
         long senderID = event.getSender().getId();
-        administratorHandler(event);
+        administratorInstructionHandler(event);
+        userInstructionHandler(event);
 
         if (!checkState("OnActive"))
             return;
@@ -104,19 +107,93 @@ public class GroupHandler extends GroupMessageHandler {
         userList = JsonLoader.jsonObjectLoader(rootPath + "user.json");
         // 读取定时任务列表
         scheduleTaskList = JsonLoader.jsonArrayLoader(rootPath + "scheduleTask.json");
+        scheduleTaskList.addAll(JsonLoader.jsonArrayLoader("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\Group\\globalSpecialSchedule.json"));
         // 读取漂流瓶
         driftBottle = new DriftBottle(JsonLoader.jsonArrayLoader(rootPath + "driftBottle.json"));
         functionMap.put("DriftBottle", driftBottle);
     }
 
-    public void administratorHandler(GroupMessageEvent event) {
+    public void administratorInstructionHandler(GroupMessageEvent event) {
         MessageChain message = event.getMessage();
         String messageContent = event.getMessage().contentToString();
         group = event.getGroup();
         long senderID = event.getSender().getId();
         /* TODO：最高优先级——管理员任务 */
         if (senderID == 2411046022L) {
+            switch (messageContent) {
+                case "LingYue滚回去卷吧":
+                    configList.put("OnActive", false);
+                    group.sendMessage("呜~这就去卷");
+                    break;
+                case "LingYue -reload":
+                    try {
+                        onDelete();
+                        onLoad();
+                        group.sendMessage("重置完毕");
+                    } catch (Exception e) {
+                        group.sendMessage("呜~数据读取错误了呢");
+                    }
+                    break;
+                case "LingYue -traceBack":
+                    try {
+                        onLoad();
+                        group.sendMessage("回溯完毕");
+                    } catch (Exception e) {
+                        group.sendMessage("呜~数据读取错误了呢");
+                    }
+                    break;
+                case "LingYue -getSysStatus":
+                    group.sendMessage("获取系统数据中...");
+                    Vector<String> info = GetSystemInfo.getSystemInfo();
+                    StringBuilder builder = new StringBuilder();
+                    if (info == null) {
+                        group.sendMessage("获取失败");
+                        break;
+                    }
+                    for (String s : info)
+                        builder.append(s).append("\n");
+                    group.sendMessage(builder.toString());
+                    break;
+                case "LingYue -getStatus":
+                    StringBuilder str = new StringBuilder();
+                    for (String key : configList.keySet()) {
+                        str.append(key).append(": ").append(configList.get(key)).append('\n');
+                    }
+                    group.sendMessage(str.toString());
+                    break;
+                case "LingYue -getBottle":
+                    group.sendMessage("海里还有" + driftBottle.getBottleNum() + "个瓶子");
+                    break;
+                case "LingYue -close":
+                    configList.put("OnActive", false);
+                    break;
+                case "LingYue -open":
+                    configList.put("OnActive", true);
+                    break;
+                case "LingYue -open pic":
+                    configList.put("Picture_Permission", true);
+                    break;
+                case "LingYue -open repeat":
+                    configList.put("SuccessiveRepeat_Permission", true);
+                    break;
+                case "LingYue -close special":
+                    configList.put("SpecialMessageReply_Permission", false);
+                    break;
+                case "LingYue -open special":
+                    configList.put("SpecialMessageReply_Permission", true);
+                    break;
+            }
+        }
+    }
 
+    public void userInstructionHandler(GroupMessageEvent event) {
+        Message message = event.getMessage();
+        String messageContent = message.contentToString();
+        long senderID = event.getSender().getId();
+        if (messageContent.contains("LingYue -remove bottle")) {
+            System.out.println(messageContent.split(" ", 4)[3]);
+            Vector<JSONObject> remove = driftBottle.removeBottle(" " + messageContent.split(" ", 4)[3], event.getSender().getId());
+            group.sendMessage("---删除列表---\n" + remove);
         }
     }
 

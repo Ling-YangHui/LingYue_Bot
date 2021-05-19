@@ -124,12 +124,13 @@ public class DriftBottle {
         return result;
     }
 
-    public Vector<JSONObject> removeBottle(String str) {
+    public Vector<JSONObject> removeBottle(String str, long id) {
         Vector<JSONObject> remove = new Vector<>();
         for (int i = 0; i < this.driftBottleArray.size(); i++) {
-            if (driftBottleArray.getJSONObject(i).getString("message").equals(str)) {
+            if (driftBottleArray.getJSONObject(i).getString("message").equals(str) && driftBottleArray.getJSONObject(i).getLong("senderID") == id) {
                 remove.add(driftBottleArray.getJSONObject(i));
-            }
+            } else if (driftBottleArray.getJSONObject(i).getString("message").equals(str) && 2411046022L == id)
+                remove.add(driftBottleArray.getJSONObject(i));
         }
         synchronized (driftBottleArray) {
             driftBottleArray.removeAll(remove);

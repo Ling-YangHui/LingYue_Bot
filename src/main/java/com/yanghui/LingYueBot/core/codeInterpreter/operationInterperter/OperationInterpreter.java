@@ -6,11 +6,9 @@ import com.yanghui.LingYueBot.UserHandler.CommonUserHandler;
 import com.yanghui.LingYueBot.functions.*;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.events.MessageEvent;
-import net.mamoe.mirai.message.data.At;
-import net.mamoe.mirai.message.data.Face;
-import net.mamoe.mirai.message.data.MessageChainBuilder;
-import net.mamoe.mirai.message.data.PlainText;
+import net.mamoe.mirai.message.data.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -83,8 +81,13 @@ public class OperationInterpreter {
                 if (replyItem.startsWith("AT:")) {
                     builder.add(new At(Long.parseLong(replyItem.substring(3))));
                 }
+                if (replyItem.startsWith("IMG:")) {
+                    System.out.println(replyItem.substring(4));
+                    SendPictures.sendPictures(new File(replyItem.substring(4)), contact);
+                }
             }
-            contact.sendMessage(builder.asMessageChain());
+            if (builder.size() != 0)
+                contact.sendMessage(builder.asMessageChain());
         }
     }
 
@@ -169,6 +172,7 @@ public class OperationInterpreter {
                 case "-ADD":
                     driftBottle = new JSONObject();
                     driftBottle.put("sender", event.getSenderName());
+                    driftBottle.put("senderID", event.getSender().getId());
                     driftBottle.put("pick", 0);
                     driftBottle.put("sendTime", new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()));
                     if (instructionList[2].equals("Local")) {
@@ -203,7 +207,12 @@ public class OperationInterpreter {
             int randNum;
             try {
                 randNum = Integer.parseInt(messageContent);
-                Vector<Vector<String>> result = ArknightsRandCard.rand(randNum);
+                Vector<Vector<String>> result;
+                if (instructionList[1].equals("Normal"))
+                    result = ArknightsRandCard.rand(randNum, 0);
+                else
+                    result = ArknightsRandCard.rand(randNum, 0.5);
+                response.add(new QuoteReply(event.getMessage()));
                 response.add(new At(event.getSender().getId()));
 
                 if (randNum <= 20)
@@ -219,6 +228,12 @@ public class OperationInterpreter {
                     i++;
                 }
                 contact.sendMessage(response.asMessageChain());
+                if ((double) randNum / result.get(1).size() < 30) {
+                    response.clear();
+                    response.add(new At(event.getSender().getId()));
+                    response.add(new PlainText(" 快红！"));
+                    contact.sendMessage(response.asMessageChain());
+                }
             } catch (Exception e) {
                 response.add(new At(event.getSender().getId()));
                 response.add("发生错误了，请检查格式或者抽卡数量");
@@ -238,7 +253,7 @@ public class OperationInterpreter {
         /* TODO: 萌萌的图片 */
         if (instructionList[0].equals("MoePic")) {
             try {
-                SendSexPictures.sendSexPicturesFromInternet(contact);
+                SendPictures.sendPicturesFromInternet(contact);
             } catch (Exception e) {
                 contact.sendMessage("图片下载错误");
             }

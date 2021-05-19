@@ -7,9 +7,9 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
-public class SendSexPictures {
+public class SendPictures {
 
-    public static void sendSexPictures(File file, Contact contact) {
+    public static void sendPictures(File file, Contact contact) {
         String[] fileName = file.getName().split("\\.");
         Contact.Companion.sendImage(contact, file, fileName[fileName.length - 1]);
     }
@@ -19,7 +19,7 @@ public class SendSexPictures {
      *
      * @param contact 发送的对象
      */
-    public static void sendSexPicturesFromInternet(Contact contact) throws Exception {
+    public static void sendPicturesFromInternet(Contact contact) throws Exception {
         URL site = new URL("https://api.dongmanxingkong.com/suijitupian/acg/1080p/index.php");
         URLConnection con = site.openConnection();
         con.setConnectTimeout(5000);
