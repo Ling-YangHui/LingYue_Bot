@@ -5,14 +5,18 @@ import com.alibaba.fastjson.JSONObject;
 import com.yanghui.LingYueBot.UserHandler.ParseUser;
 import com.yanghui.LingYueBot.core.codeInterpreter.conditionInterpreter.ConditionInterpreter;
 import com.yanghui.LingYueBot.core.codeInterpreter.operationInterperter.OperationInterpreter;
+import com.yanghui.LingYueBot.core.coreDatabaseUtil.UserDatabaseUtil;
 import com.yanghui.LingYueBot.core.coreTools.JsonLoader;
 import com.yanghui.LingYueBot.core.messageHandler.GroupMessageHandler;
+import com.yanghui.LingYueBot.functions.DailyReport;
 import com.yanghui.LingYueBot.functions.DriftBottle;
 import com.yanghui.LingYueBot.functions.GetSystemInfo;
+import net.mamoe.mirai.contact.User;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Timer;
@@ -23,8 +27,8 @@ public class GroupHandler extends GroupMessageHandler {
     // 图片路径
     public String picPath = "D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\pictureSrc";
 
-    public GroupHandler(String path) {
-        super(path);
+    public GroupHandler(String path, long groupID) {
+        super(path, groupID);
         paramList.put("SuccessiveRepeat", false);
         paramList.put("LastMessage", "");
         configList.put("SuccessiveRepeat_Permission", true);
@@ -79,7 +83,14 @@ public class GroupHandler extends GroupMessageHandler {
             return;
 
         addAndChangeUser(event);
-
+        try {
+            if (UserDatabaseUtil.getUserBoolean(senderID, "isForbidden")) {
+                return;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
         if (checkState("SuccessiveRepeat_Permission"))
             autoRepeat(event);
 
@@ -93,7 +104,6 @@ public class GroupHandler extends GroupMessageHandler {
     @Override
     public void onDelete() throws Exception {
         JsonLoader.saveJSONObject(rootPath, "user.json", userList);
-        driftBottle.saveDriftBottle(rootPath, "driftBottle.json");
     }
 
     public void onLoad() throws Exception {
@@ -109,7 +119,7 @@ public class GroupHandler extends GroupMessageHandler {
         scheduleTaskList = JsonLoader.jsonArrayLoader(rootPath + "scheduleTask.json");
         scheduleTaskList.addAll(JsonLoader.jsonArrayLoader("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\Group\\globalSpecialSchedule.json"));
         // 读取漂流瓶
-        driftBottle = new DriftBottle(JsonLoader.jsonArrayLoader(rootPath + "driftBottle.json"));
+        driftBottle = new DriftBottle(groupID);
         functionMap.put("DriftBottle", driftBottle);
     }
 
@@ -162,7 +172,11 @@ public class GroupHandler extends GroupMessageHandler {
                     group.sendMessage(str.toString());
                     break;
                 case "LingYue -getBottle":
-                    group.sendMessage("海里还有" + driftBottle.getBottleNum() + "个瓶子");
+                    try {
+                        group.sendMessage("海里还有" + driftBottle.getBottleNum() + "个瓶子");
+                    } catch (SQLException e) {
+                        group.sendMessage("数据库错误");
+                    }
                     break;
                 case "LingYue -close":
                     configList.put("OnActive", false);
@@ -182,6 +196,13 @@ public class GroupHandler extends GroupMessageHandler {
                 case "LingYue -open special":
                     configList.put("SpecialMessageReply_Permission", true);
                     break;
+                case "LingYue -report":
+                    try {
+                        DailyReport.dailyReport(this);
+                    } catch (SQLException e) {
+                        group.sendMessage("读取报表出错");
+                    }
+                    break;
             }
         }
     }
@@ -192,8 +213,13 @@ public class GroupHandler extends GroupMessageHandler {
         long senderID = event.getSender().getId();
         if (messageContent.contains("LingYue -remove bottle")) {
             System.out.println(messageContent.split(" ", 4)[3]);
-            Vector<JSONObject> remove = driftBottle.removeBottle(" " + messageContent.split(" ", 4)[3], event.getSender().getId());
-            group.sendMessage("---删除列表---\n" + remove);
+            Vector<JSONObject> remove = null;
+            try {
+                remove = driftBottle.removeBottle(" " + messageContent.split(" ", 4)[3], event.getSender().getId());
+                group.sendMessage("---删除列表---\n" + remove);
+            } catch (SQLException e) {
+                group.sendMessage("数据库错误，删除失败");
+            }
         }
     }
 
@@ -205,6 +231,7 @@ public class GroupHandler extends GroupMessageHandler {
         MessageChain message = event.getMessage();
         String messageContent = event.getMessage().contentToString();
         group = event.getGroup();
+        User user = event.getSender();
         long senderID = event.getSender().getId();
         /* 数据列表存在性认证 */
         if (userList.get(senderID + "") == null)
@@ -214,8 +241,17 @@ public class GroupHandler extends GroupMessageHandler {
             System.out.println("添加用户" + event.getSenderName());
         }
 
-        /* 列表数据修正 */
-        userList.getJSONObject(senderID + "").put("isAdministrator", userList.getJSONObject(senderID + "").getIntValue("like") > 200);
+        /* 数据库操作 */
+        try {
+            if (!UserDatabaseUtil.getUserExist(senderID)) {
+                UserDatabaseUtil.insertUser(event.getSender());
+                System.out.println("INSERT USER" + event.getSenderName());
+            } else if (!UserDatabaseUtil.getUserString(senderID, "userName").equals(user.getNick())) {
+                UserDatabaseUtil.setUserString(senderID, "userName", user.getNick());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void autoRepeat(GroupMessageEvent event) {
@@ -265,7 +301,7 @@ public class GroupHandler extends GroupMessageHandler {
             boolean conditionSatisfied = false;
             int satisfiedNum = -1;
             for (int j = 0; j < replyObject.getJSONArray("condition").size(); j++) {
-                conditionSatisfied = ConditionInterpreter.getConditionSatisfied(replyObject.getJSONArray("condition"), j, event, userList, replyList, configList);
+                conditionSatisfied = ConditionInterpreter.getConditionSatisfied(replyObject.getJSONArray("condition"), j, event, replyList, configList);
                 if (conditionSatisfied) {
                     satisfiedNum = j;
                     break;
@@ -273,7 +309,7 @@ public class GroupHandler extends GroupMessageHandler {
             }
             if (!conditionSatisfied)
                 continue;
-            OperationInterpreter.execute(replyObject, satisfiedNum, event, userList.getJSONObject(senderID + ""), group, functionMap);
+            OperationInterpreter.execute(replyObject, satisfiedNum, event, userList.getJSONObject(senderID + ""), group, functionMap, groupID);
         }
     }
 }

@@ -1,149 +1,185 @@
 package com.yanghui.LingYueBot.functions;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.yanghui.LingYueBot.core.coreTools.JsonLoader;
+import com.yanghui.LingYueBot.core.coreDatabaseUtil.BaseDatabaseUtil;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.Vector;
 
-public class DriftBottle {
+public class DriftBottle extends BaseDatabaseUtil {
 
-    private static final String rootPath = "D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\";
-    private static final String name = "driftBottle.json";
-    private static final String path = rootPath + name;
-    public static JSONArray driftBottleArrayAcrossGroup;
+    private static final Object lock = new Object();
+    private final Object selfLock = new Object();
+    private final long groupID;
 
-    static {
-        try {
-            driftBottleArrayAcrossGroup = JsonLoader.jsonArrayLoader(path);
+    public DriftBottle(long groupID) {
+        this.groupID = groupID;
+    }
 
-            // 获取当前系统日期
-            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
-            Timer scheduleTimer = new Timer();
-            final String[] pastTime = {""};
-            scheduleTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    String nowTime = sdf.format(new Date());
-                    if (nowTime.equals(pastTime[0])) {
-                        return;
-                    }
-                    try {
-                        saveDriftBottleFromAll();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    pastTime[0] = nowTime;
+    public static void addDriftBottleALL(JSONObject newBottle, long operationID) throws SQLException {
+        if (hasSameBottleALL(newBottle.getString("message")))
+            return;
+        if (newBottle.getString("message").isEmpty())
+            return;
+        long num = getBottleNumAll();
+        String sql = "INSERT INTO DriftBottle " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
+        PreparedStatement statement = getStatement(sql);
+        statement.setLong(1, operationID);
+        statement.setLong(2, newBottle.getLong("senderID"));
+        statement.setString(3, newBottle.getString("message").trim());
+        statement.setLong(4, 0);
+        statement.setShort(5, (short) 2);
+        statement.setTimestamp(6, new Timestamp(new Date().getTime()));
+        statement.executeUpdate();
+        statement.close();
+    }
+
+    public static JSONObject getDriftBottleAll() throws SQLException {
+        JSONObject result = new JSONObject();
+        String sql = "SELECT TOP 1 * FROM DriftBottle " +
+                "WHERE groupID = ? AND restPick > 0" +
+                "ORDER BY newid()";
+        PreparedStatement statement = getStatement(sql);
+        statement.setString(1, "0");
+        ResultSet resultSet = statement.executeQuery();
+        resultSet.first();
+        result.put("sendTime", resultSet.getTimestamp("sendTime").getTime());
+        result.put("message", resultSet.getString("content"));
+        synchronized (lock) {
+            setBottleShort(resultSet.getLong("operationID"), "restPick", (short) (resultSet.getShort("restPick") - 1));
+        }
+        statement.close();
+        return result;
+    }
+
+    public static long getBottleNumAll() throws SQLException {
+        String sql = "SELECT * FROM DriftBottle";
+        PreparedStatement statement = getStatement(sql);
+        ResultSet resultSet = statement.executeQuery();
+        resultSet.last();
+        long num = resultSet.getRow();
+        statement.close();
+        return num;
+    }
+
+    public static void setBottleShort(long id, String key, short num) throws SQLException {
+        String sql = "UPDATE DriftBottle SET " + key + " = ? " +
+                "WHERE operationID = ?";
+        PreparedStatement statement = getStatement(sql);
+//        statement.setString(1, key);
+        statement.setShort(1, num);
+        statement.setLong(2, id);
+        statement.executeUpdate();
+        statement.close();
+    }
+
+    public static void deleteBottle(long bottleID) throws SQLException {
+        String sql = "DELETE FROM DriftBottle " +
+                "WHERE operationID = ?";
+        PreparedStatement statement = getStatement(sql);
+        statement.setLong(1, bottleID);
+        statement.executeUpdate();
+        statement.close();
+    }
+
+    public static boolean hasSameBottleALL(String message) throws SQLException {
+        String sql = "SELECT * FROM DriftBottle " +
+                "WHERE content = ? AND GroupID = 0 AND restPick > 0";
+        PreparedStatement statement = getStatement(sql);
+        statement.setString(1, message);
+        ResultSet resultSet = statement.executeQuery();
+        resultSet.last();
+        int num = resultSet.getRow();
+        statement.close();
+        return num != 0;
+    }
+
+    public void addDriftBottle(JSONObject newBottle, long operationID) throws SQLException {
+        if (hasSameBottle(newBottle.getString("message")))
+            return;
+        if (newBottle.getString("message").isEmpty())
+            return;
+        String sql = "INSERT INTO DriftBottle " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
+        PreparedStatement statement = getStatement(sql);
+        statement.setLong(1, operationID);
+        statement.setLong(2, newBottle.getLong("senderID"));
+        statement.setString(3, newBottle.getString("message").trim());
+        statement.setLong(4, groupID);
+        statement.setShort(5, (short) 2);
+        statement.setTimestamp(6, new Timestamp(new Date().getTime()));
+        statement.executeUpdate();
+        statement.close();
+    }
+
+    public JSONObject getDriftBottle() throws SQLException {
+        JSONObject result = new JSONObject();
+        String sql = "SELECT TOP 1 * FROM DriftBottle " +
+                "WHERE groupID = ? AND restPick > 0" +
+                "ORDER BY newid()";
+        PreparedStatement statement = getStatement(sql);
+        statement.setLong(1, groupID);
+        ResultSet resultSet = statement.executeQuery();
+        resultSet.first();
+        result.put("sendTime", resultSet.getTimestamp("sendTime").getTime());
+        result.put("message", resultSet.getString("content"));
+        synchronized (selfLock) {
+            setBottleShort(resultSet.getLong("operationID"), "restPick", (short) (resultSet.getShort("restPick") - 1));
+        }
+        statement.close();
+        return result;
+    }
+
+    public Vector<JSONObject> removeBottle(String str, long id) throws SQLException {
+        Vector<JSONObject> remove = new Vector<>();
+        String sql = "SELECT * FROM DriftBottle " +
+                "WHERE groupID = ? AND content = ?";
+        PreparedStatement statement = getStatement(sql);
+        statement.setLong(1, groupID);
+        statement.setString(2, str);
+        ResultSet resultSet = statement.executeQuery();
+        synchronized (selfLock) {
+            while (resultSet.next()) {
+                if (resultSet.getLong("senderID") == id || id == 2411046022L) {
+                    JSONObject removeObject = new JSONObject();
+                    removeObject.put("senderID", resultSet.getLong("senderID"));
+                    removeObject.put("content", resultSet.getString("content"));
+                    remove.add(removeObject);
+                    deleteBottle(resultSet.getLong("operationID"));
                 }
-            }, 10, 1000 * 30);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private final JSONArray driftBottleArray;
-
-    public DriftBottle(JSONArray driftBottleArray) {
-        this.driftBottleArray = driftBottleArray;
-    }
-
-    public static void addDriftBottleToAll(JSONObject newBottle) {
-        boolean hasSameBottle = false;
-        for (int i = 0; i < driftBottleArrayAcrossGroup.size(); i++) {
-            if (newBottle.getString("message").equals(driftBottleArrayAcrossGroup.getJSONObject(i).getString("message"))) {
-                hasSameBottle = true;
-                break;
             }
         }
-        if (!hasSameBottle)
-            synchronized (path) {
-                driftBottleArrayAcrossGroup.add(newBottle);
-            }
-    }
-
-    public static JSONObject getDriftBottleFromAll() {
-        int len = driftBottleArrayAcrossGroup.size();
-        if (len == 0)
-            return null;
-        JSONObject result = driftBottleArrayAcrossGroup.getJSONObject(new Random().nextInt(len));
-        synchronized (path) {
-            result.put("pick", result.getIntValue("pick") + 1);
-            if (result.getIntValue("pick") >= 2)
-                driftBottleArrayAcrossGroup.remove(result);
-        }
-        return result;
-    }
-
-    public static Vector<JSONObject> removeDriftBottleFromAll(String str) {
-        Vector<JSONObject> remove = new Vector<>();
-        for (int i = 0; i < driftBottleArrayAcrossGroup.size(); i++) {
-            if (driftBottleArrayAcrossGroup.getJSONObject(i).getString("message").equals(str)) {
-                remove.add(driftBottleArrayAcrossGroup.getJSONObject(i));
-            }
-        }
-        synchronized (path) {
-            driftBottleArrayAcrossGroup.removeAll(remove);
-        }
+        statement.close();
         return remove;
     }
 
-    public static void saveDriftBottleFromAll() throws Exception {
-        JsonLoader.saveJSONArray(rootPath, name, driftBottleArrayAcrossGroup);
+    public long getBottleNum() throws SQLException {
+        String sql = "SELECT * FROM DriftBottle " +
+                "WHERE groupID = ?";
+        PreparedStatement statement = getStatement(sql);
+        statement.setLong(1, groupID);
+        ResultSet resultSet = statement.executeQuery();
+        resultSet.last();
+        long num = resultSet.getRow();
+        statement.close();
+        return num;
     }
 
-    public static int getBottleNumFromAll() {
-        return driftBottleArrayAcrossGroup.size();
+    public boolean hasSameBottle(String message) throws SQLException {
+        String sql = "SELECT * FROM DriftBottle " +
+                "WHERE content = ? AND groupID = ? AND restPick > 0";
+        PreparedStatement statement = getStatement(sql);
+        statement.setString(1, message);
+        statement.setLong(2, groupID);
+        ResultSet resultSet = statement.executeQuery();
+        resultSet.last();
+        int num = resultSet.getRow();
+        statement.close();
+        return num != 0;
     }
-
-    public void addDriftBottle(JSONObject newBottle) {
-        boolean hasSameBottle = false;
-        for (int i = 0; i < this.driftBottleArray.size(); i++) {
-            if (newBottle.getString("message").equals(driftBottleArray.getJSONObject(i).getString("message"))) {
-                hasSameBottle = true;
-                break;
-            }
-        }
-        if (!hasSameBottle)
-            synchronized (driftBottleArray) {
-                driftBottleArray.add(newBottle);
-            }
-    }
-
-    public JSONObject getDriftBottle() {
-        int len = driftBottleArray.size();
-        if (len == 0)
-            return null;
-        JSONObject result = driftBottleArray.getJSONObject(new Random().nextInt(len));
-        synchronized (driftBottleArray) {
-            result.put("pick", result.getIntValue("pick") + 1);
-            if (result.getIntValue("pick") >= 2)
-                driftBottleArray.remove(result);
-        }
-        return result;
-    }
-
-    public Vector<JSONObject> removeBottle(String str, long id) {
-        Vector<JSONObject> remove = new Vector<>();
-        for (int i = 0; i < this.driftBottleArray.size(); i++) {
-            if (driftBottleArray.getJSONObject(i).getString("message").equals(str) && driftBottleArray.getJSONObject(i).getLong("senderID") == id) {
-                remove.add(driftBottleArray.getJSONObject(i));
-            } else if (driftBottleArray.getJSONObject(i).getString("message").equals(str) && 2411046022L == id)
-                remove.add(driftBottleArray.getJSONObject(i));
-        }
-        synchronized (driftBottleArray) {
-            driftBottleArray.removeAll(remove);
-        }
-        return remove;
-    }
-
-    public void saveDriftBottle(String rootPath, String name) throws Exception {
-        JsonLoader.saveJSONArray(rootPath, name, driftBottleArray);
-    }
-
-    public int getBottleNum() {
-        return this.driftBottleArray.size();
-    }
-
 }

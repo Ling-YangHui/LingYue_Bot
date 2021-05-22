@@ -1,10 +1,11 @@
 package com.yanghui.LingYueBot.core.codeInterpreter.conditionInterpreter;
 
 import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.yanghui.LingYueBot.annotations.PoweredByMirai;
+import com.yanghui.LingYueBot.core.coreDatabaseUtil.UserDatabaseUtil;
 import net.mamoe.mirai.event.events.MessageEvent;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Stack;
 
@@ -26,8 +27,9 @@ class InputBuffer {
     }
 
     @PoweredByMirai
-    public Node getNode(MessageEvent event, JSONObject userInfo, JSONArray replyList, HashMap<String, Object> botStatus) {
+    public Node getNode(MessageEvent event, JSONArray replyList, HashMap<String, Object> botStatus) {
         String senderID = Long.toString(event.getSender().getId());
+        long id = event.getSender().getId();
         String messageContent = event.getMessage().contentToString();
         Node.NodeType nodeType;
         StringBuilder stringCacheBuilder;
@@ -74,16 +76,32 @@ class InputBuffer {
             case "false":
                 break;
             case "isAdministrator":
-                value = userInfo.getJSONObject(senderID).getBoolean("isAdministrator");
+                try {
+                    value = UserDatabaseUtil.getUserBoolean(id, "isAdministrator");
+                } catch (SQLException e) {
+                    value = false;
+                }
                 break;
             case "isSpecial":
-                value = userInfo.getJSONObject(senderID).getBoolean("isSpecial");
+                try {
+                    value = UserDatabaseUtil.getUserBoolean(id, "isSpecial");
+                } catch (SQLException e) {
+                    value = false;
+                }
                 break;
             case "isMale":
-                value = userInfo.getJSONObject(senderID).getString("gender").equals("male");
+                try {
+                    value = UserDatabaseUtil.getUserString(id, "gender").equals("男");
+                } catch (SQLException e) {
+                    value = false;
+                }
                 break;
             case "isFemale":
-                value = userInfo.getJSONObject(senderID).getString("gender").equals("female");
+                try {
+                    value = UserDatabaseUtil.getUserString(id, "gender").equals("女");
+                } catch (SQLException e) {
+                    value = false;
+                }
                 break;
             case "contains":
                 stringCacheBuilder = new StringBuilder();
@@ -110,7 +128,11 @@ class InputBuffer {
                     stringCacheBuilder.append(c);
                 } while (c != ')');
                 stringCache = stringCacheBuilder.substring(1, stringCacheBuilder.length() - 1);
-                value = userInfo.getJSONObject(senderID).getIntValue("like") < Integer.parseInt(stringCache);
+                try {
+                    value = UserDatabaseUtil.getUserInt(id, "favor") < Integer.parseInt(stringCache);
+                } catch (SQLException e) {
+                    value = false;
+                }
                 break;
             case "likeMoreThan":
                 stringCacheBuilder = new StringBuilder();
@@ -119,7 +141,11 @@ class InputBuffer {
                     stringCacheBuilder.append(c);
                 } while (c != ')');
                 stringCache = stringCacheBuilder.substring(1, stringCacheBuilder.length() - 1);
-                value = userInfo.getJSONObject(senderID).getIntValue("like") > Integer.parseInt(stringCache);
+                try {
+                    value = UserDatabaseUtil.getUserInt(id, "favor") > Integer.parseInt(stringCache);
+                } catch (SQLException e) {
+                    value = false;
+                }
                 break;
         }
         return new Node(nodeType, Node.Sign.END, value);

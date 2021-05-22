@@ -324,7 +324,7 @@ public class CommonUserHandler extends UserMessageHandler {
             }
             if (!conditionSatisfied)
                 continue;
-            OperationInterpreter.execute(replyObject, satisfiedNum, event, null);
+            OperationInterpreter.execute(replyObject, satisfiedNum, event, null, user.getId());
         }
     }
 

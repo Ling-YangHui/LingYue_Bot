@@ -15,7 +15,7 @@ public class XiaoFangZhou extends GroupHandler {
     public String picPath = "D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\pictureSrc";
 
     public XiaoFangZhou(String path) {
-        super(path);
+        super(path, 717151707L);
     }
 
     @Override

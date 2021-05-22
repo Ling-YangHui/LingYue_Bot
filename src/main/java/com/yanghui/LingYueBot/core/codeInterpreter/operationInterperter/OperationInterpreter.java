@@ -3,6 +3,7 @@ package com.yanghui.LingYueBot.core.codeInterpreter.operationInterperter;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.yanghui.LingYueBot.UserHandler.CommonUserHandler;
+import com.yanghui.LingYueBot.core.coreDatabaseUtil.OperationDatabaseUtil;
 import com.yanghui.LingYueBot.functions.*;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.events.MessageEvent;
@@ -10,14 +11,14 @@ import net.mamoe.mirai.message.data.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class OperationInterpreter {
 
-    public static void execute(JSONObject replyObject, int num, MessageEvent event, JSONObject userObject, Contact contact, HashMap<String, Object> FunctionMap) {
+    public static void execute(JSONObject replyObject, int num, MessageEvent event, JSONObject userObject, Contact contact, HashMap<String, Object> FunctionMap, long groupID) {
         JSONArray reply = replyObject.getJSONArray("reply");
         JSONArray operation = replyObject.getJSONArray("operation");
         String conditionStr = replyObject.getJSONArray("condition").getString(num);
@@ -38,16 +39,16 @@ public class OperationInterpreter {
             String[] operationStrList = conditionList.get(3).split(",");
             for (String s : operationStrList) {
                 s = s.trim();
-                executeOperation(operation.getString(Integer.parseInt(s)), event, contact, userObject, FunctionMap);
+                executeOperation(operation.getString(Integer.parseInt(s)), event, contact, userObject, FunctionMap, groupID);
             }
         }
     }
 
-    public static void execute(JSONObject replyObject, int num, MessageEvent event, HashMap<String, Object> functionMap) {
-        execute(replyObject, num, event, CommonUserHandler.userInfo.getJSONObject(Long.toString(event.getSender().getId())), event.getSender(), functionMap);
+    public static void execute(JSONObject replyObject, int num, MessageEvent event, HashMap<String, Object> functionMap, long groupID) {
+        execute(replyObject, num, event, CommonUserHandler.userInfo.getJSONObject(Long.toString(event.getSender().getId())), event.getSender(), functionMap, groupID);
     }
 
-    public static void executeReply(JSONObject replyObject, String replyStr, MessageEvent event, Contact contact, JSONObject userObject, HashMap<String, Object> FunctionMap) {
+    public static void executeReply(JSONObject replyObject, String replyStr, MessageEvent event, Contact contact, JSONObject userObject, HashMap<String, Object> FunctionMap, long groupID) {
         String regex = "(\\[[^\\]]*\\])";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(replyStr);
@@ -59,7 +60,7 @@ public class OperationInterpreter {
         executeReply(replyFunc.get(0), contact);
         String[] operationList = replyFunc.get(1).split(",");
         for (String str : operationList) {
-            executeOperation(operation.getString(Integer.parseInt(str)), event, contact, userObject, FunctionMap);
+            executeOperation(operation.getString(Integer.parseInt(str)), event, contact, userObject, FunctionMap, groupID);
         }
     }
 
@@ -91,7 +92,17 @@ public class OperationInterpreter {
         }
     }
 
-    public static void executeOperation(String operation, MessageEvent event, Contact contact, JSONObject userObject, HashMap<String, Object> functionMap) {
+    public static void executeOperation(String operation, MessageEvent event, Contact contact, JSONObject userObject, HashMap<String, Object> functionMap, long groupID) {
+
+        long operationID;
+        try {
+            operationID = OperationDatabaseUtil.insertOperation(operation, event, groupID);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            contact.sendMessage("数据库错误，指令执行失败");
+            return;
+        }
+
         String[] instructionList = operation.split(" ");
         MessageChainBuilder response = new MessageChainBuilder(128);
         /* TODO: 好感变化*/
@@ -144,17 +155,22 @@ public class OperationInterpreter {
             switch (instructionList[1]) {
                 case "-GET":
                     JSONObject driftBottle = null;
-                    if (instructionList[2].equals("Local"))
-                        driftBottle = ((DriftBottle) functionMap.get("DriftBottle")).getDriftBottle();
-                    else if (instructionList[2].equals("Global"))
-                        driftBottle = DriftBottle.getDriftBottleFromAll();
+                    try {
+                        if (instructionList[2].equals("Local"))
+                            driftBottle = ((DriftBottle) functionMap.get("DriftBottle")).getDriftBottle();
+                        else if (instructionList[2].equals("Global"))
+                            driftBottle = DriftBottle.getDriftBottleAll();
+                    } catch (SQLException e) {
+                        contact.sendMessage("这片海里，什么都没有呢");
+                        break;
+                    }
                     if (driftBottle == null) {
                         contact.sendMessage("这片海里，什么都没有呢");
                     }
                     long day, hour, minute;
                     try {
                         assert driftBottle != null;
-                        long sendTime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(driftBottle.getString("sendTime")).getTime();
+                        long sendTime = driftBottle.getLong("sendTime");
                         long nowTime = new Date().getTime();
                         long timeSpace = nowTime - sendTime;
                         day = timeSpace / 1000 / 3600 / 24;
@@ -171,18 +187,30 @@ public class OperationInterpreter {
                     break;
                 case "-ADD":
                     driftBottle = new JSONObject();
-                    driftBottle.put("sender", event.getSenderName());
+                    driftBottle.put("sender", event.getSender().getNick());
                     driftBottle.put("senderID", event.getSender().getId());
-                    driftBottle.put("pick", 0);
-                    driftBottle.put("sendTime", new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()));
+                    if (event.getMessage().contentToString().length() > 180) {
+                        contact.sendMessage("数据超长");
+                        break;
+                    }
                     if (instructionList[2].equals("Local")) {
                         if (!event.getMessage().contentToString().replace("@3598326822 丢瓶子", "").trim().isEmpty())
                             driftBottle.put("message", event.getMessage().contentToString().replace("@3598326822 丢瓶子", ""));
-                        ((DriftBottle) functionMap.get("DriftBottle")).addDriftBottle(driftBottle);
+                        try {
+                            ((DriftBottle) functionMap.get("DriftBottle")).addDriftBottle(driftBottle, operationID);
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                            contact.sendMessage("数据库错误，丢瓶子失败");
+                        }
                     } else if (instructionList[2].equals("Global")) {
                         driftBottle.put("message", event.getMessage().contentToString().replace("@3598326822 丢大瓶子", ""));
-                        if (!event.getMessage().contentToString().replace("@3598326822 丢大瓶子", "").trim().isEmpty())
-                            DriftBottle.addDriftBottleToAll(driftBottle);
+                        if (!event.getMessage().contentToString().replace("@3598326822 丢大瓶子", "").trim().isEmpty()) {
+                            try {
+                                DriftBottle.addDriftBottleALL(driftBottle, operationID);
+                            } catch (SQLException e) {
+                                contact.sendMessage("数据库错误，丢瓶子失败");
+                            }
+                        }
                     }
                     break;
             }
@@ -234,6 +262,7 @@ public class OperationInterpreter {
                     response.add(new PlainText(" 快红！"));
                     contact.sendMessage(response.asMessageChain());
                 }
+                ArknightsRandCard.addRandRecord(operationID, event, result);
             } catch (Exception e) {
                 response.add(new At(event.getSender().getId()));
                 response.add("发生错误了，请检查格式或者抽卡数量");

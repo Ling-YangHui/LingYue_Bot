@@ -2,7 +2,7 @@
 
 ## 简介
 
-当前版本 Version 2.1.3-RC
+当前版本 Version 3.0.0-RC
 
 这是一个使用[Mirai](https://github.com/mamoe/mirai) 框架搭建的小型QQ群bot项目，当前支持自动回复、好感度（数值系统）、自动复读、特殊成员以及一定的管理员操作能力，具体的操作方法见下文。
 
@@ -10,14 +10,8 @@
 
 ## 新特性一览
 
-版本 V2.1.3-RC Update 513\
-添加了明日方舟模拟抽卡功能！
-
-版本 V2.1.2-RC Update 512\
-添加了跨群漂流瓶，请谨言慎行哦！
-
-版本 V2.1.1-RC Update 508\
-漂流瓶的捡起的次数有限制了
+版本 3.0.0-RC\
+从这个版本开始，LingYue所有的数据将不会在json中存储，转而使用基于SQLServer的数据库。但是LingYue使用的指令集依然使用Json进行存储，以方便随时修改和调整。
 
 ## 插件功能及使用方法
 
@@ -26,6 +20,8 @@
 ### 深度自定义
 
 项目通过内部的GroupMessageHandler接口实现深度的自定义。如果自己写了一个用来监测某个群的类，需要继承GroupMessageHandler并实现其中的onCreate、handleMessage和onDelete方法。它们分别会在Bot启动、收到消息和关闭的时候调用。一般而言onCreate用来实现一些文件数据载入的方法，onDelete用来实现文件数据保存的方法。
+
+此外项目配套了一个基本的模板GroupHandler，新添加的群只需要继承这一个模板甚至是直接使用这个模板来生成一个实例就可以对这个新群进行消息管理。
 
 ### 非代码自定义
 
@@ -71,27 +67,6 @@
 ~~~
 
 每个回复通过dict形式封装，所有的回复写在一个array里面
-
-对于用户，框架是半自动管理的。当用户列表中没有当前发言用户的ID，它就会自动添加，当然了也可以手动修改user.json文件。这个文件只有在Bot关闭的时候才能有效修改。文件格式如下：
-
-~~~json5
-{
-    "2411046022": {
-        "nick": "1902 阳辉阳辉一起卷翻天吧",
-        "valid": false,
-        "schedule": true,
-        "emotion": 57,
-        "gender": "",
-        "like": 7,
-        "isSpecial": true,
-        "id": 2411046022,
-        "isAdministrator": false,
-        "isBUAAer": false
-    }
-}
-~~~
-
-含义很清楚，不再赘述
 
 ### 新回复定义核心
 
@@ -152,6 +127,8 @@ API:
 由LingYue开发组提供API
 
 ## 版本日志
+
+2020/5/22 &emsp; 3.0.0-RC: 基于SQLServer的LingYue版本上线
 
 2020/5/13 &emsp; 2.1.3-RC: 明日方舟模拟抽卡功能上线
 

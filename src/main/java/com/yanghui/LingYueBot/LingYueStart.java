@@ -1,6 +1,7 @@
 package com.yanghui.LingYueBot;
 
 import com.yanghui.LingYueBot.UserHandler.CommonUserHandler;
+import com.yanghui.LingYueBot.core.coreDatabaseUtil.BaseDatabaseUtil;
 import com.yanghui.LingYueBot.core.messageHandler.GroupMessageHandler;
 import com.yanghui.LingYueBot.core.messageHandler.UserMessageHandler;
 import com.yanghui.LingYueBot.groupHandler.BeiShiCheDui;
@@ -80,6 +81,7 @@ public class LingYueStart extends JavaPlugin {
 
     @Override
     public void onLoad(@NotNull PluginComponentStorage $this$onLoad) {
+        BaseDatabaseUtil.initDatabase();
         /* TODO: 这里写不同消息对象的初始化事件 */
         // 初始化事件handler
         groupHandlerHashMap.put(717151707L, new XiaoFangZhou("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\Group\\XiaoFangZhou\\"));

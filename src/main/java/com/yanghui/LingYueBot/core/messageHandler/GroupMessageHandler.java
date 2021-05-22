@@ -10,8 +10,11 @@ import java.util.HashMap;
 
 public abstract class GroupMessageHandler {
 
-    public GroupMessageHandler(String str) {
-        rootPath = str;
+    public long groupID;
+
+    public GroupMessageHandler(String path, long groupID) {
+        rootPath = path;
+        this.groupID = groupID;
     }
 
     public Group group = null;
