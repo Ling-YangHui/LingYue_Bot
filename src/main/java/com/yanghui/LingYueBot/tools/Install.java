@@ -20,7 +20,7 @@ public class Install {
             outputStream.close();
             System.out.println("\n------------Finish------------");
             System.out.println("Size: " + new File("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiCore\\plugins\\LingYue.mirai.jar").length() / 1024 + "KB");
-            System.out.println("Time: " + new Date().toString());
+            System.out.println("Time: " + new Date());
         } catch (Exception e) {
             e.printStackTrace();
         }

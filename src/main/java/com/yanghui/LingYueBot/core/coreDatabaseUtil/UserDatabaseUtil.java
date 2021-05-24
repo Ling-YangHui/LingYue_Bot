@@ -10,6 +10,17 @@ import java.util.Vector;
 
 public class UserDatabaseUtil extends BaseDatabaseUtil {
 
+    public static Vector<Long> getUserList() throws SQLException {
+        Vector<Long> result = new Vector<>();
+        String sql = "SELECT id FROM Users";
+        PreparedStatement statement = getStatement(sql);
+        ResultSet resultSet = statement.executeQuery();
+        while (resultSet.next()) {
+            result.add(resultSet.getLong(1));
+        }
+        return result;
+    }
+
     public static PreparedStatement selectUser(long id) throws SQLException {
         Vector<Object> result = new Vector<>();
         String sql = "SELECT * FROM Users WHERE id = ?";
@@ -67,6 +78,26 @@ public class UserDatabaseUtil extends BaseDatabaseUtil {
         statement.close();
     }
 
+    public static short getUserShort(long id, String key) throws SQLException {
+        String sql = "SELECT " + key + " FROM Users WHERE id = ?";
+        PreparedStatement statement = getStatement(sql);
+        statement.setLong(1, id);
+        ResultSet resultSet = statement.executeQuery();
+        resultSet.first();
+        short result = resultSet.getShort(1);
+        statement.close();
+        return result;
+    }
+
+    public static void setUserShort(long id, String key, short value) throws SQLException {
+        String sql = "UPDATE Users SET " + key + " = ? WHERE id = ?";
+        PreparedStatement statement = getStatement(sql);
+        statement.setShort(1, value);
+        statement.setLong(2, id);
+        statement.executeUpdate();
+        statement.close();
+    }
+
     public static boolean getUserBoolean(long id, String key) throws SQLException {
         String sql = "SELECT " + key + " FROM Users WHERE id = ?";
         PreparedStatement statement = getStatement(sql);
@@ -95,7 +126,7 @@ public class UserDatabaseUtil extends BaseDatabaseUtil {
         statement.setBoolean(3, true);
         statement.setInt(4, new Random().nextInt(100));
         statement.setFloat(5, 1000.0F);
-        statement.setString(6, "保密");
+        statement.setShort(6, (short) 0);
         statement.setBoolean(7, false);
         statement.setBoolean(8, false);
         statement.setBoolean(9, false);

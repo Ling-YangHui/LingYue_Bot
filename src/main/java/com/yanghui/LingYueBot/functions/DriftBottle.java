@@ -25,7 +25,6 @@ public class DriftBottle extends BaseDatabaseUtil {
             return;
         if (newBottle.getString("message").isEmpty())
             return;
-        long num = getBottleNumAll();
         String sql = "INSERT INTO DriftBottle " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
         PreparedStatement statement = getStatement(sql);

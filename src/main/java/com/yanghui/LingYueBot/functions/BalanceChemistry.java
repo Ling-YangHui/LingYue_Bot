@@ -11,7 +11,7 @@ public class BalanceChemistry {
             return "运行格式：\n@Bot(空格)配平(空格)方程式\n方程式可以是直接用等号连接，也可以用分号进行模糊匹配，如H2;O2;H2O，元素符号必须要保证正确";
         }
         Runtime rt = Runtime.getRuntime();
-        Process pr = rt.exec("python -u \"D:\\IntelliJ IDEA programming\\MiraiBot\\src\\main\\python\\Balance.py\" " + str);
+        Process pr = rt.exec("python -u C:\\LingYue\\Balance.py " + str);
         BufferedReader input = new BufferedReader(new InputStreamReader(pr.getInputStream(), "GBK"));
         String line;
         StringBuilder builder = new StringBuilder();

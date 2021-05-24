@@ -18,6 +18,6 @@ public class PoemToJson {
             jsonString.append(cache);
             jsonString.append("\\n");
         }
-        System.out.println(jsonString.append("\"").toString());
+        System.out.println(jsonString.append("\""));
     }
 }

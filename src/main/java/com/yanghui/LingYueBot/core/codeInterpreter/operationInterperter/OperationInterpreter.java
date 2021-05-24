@@ -2,14 +2,14 @@ package com.yanghui.LingYueBot.core.codeInterpreter.operationInterperter;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.yanghui.LingYueBot.UserHandler.CommonUserHandler;
 import com.yanghui.LingYueBot.core.coreDatabaseUtil.OperationDatabaseUtil;
+import com.yanghui.LingYueBot.core.coreDatabaseUtil.ResourceDatabaseUtil;
+import com.yanghui.LingYueBot.core.coreDatabaseUtil.UserDatabaseUtil;
 import com.yanghui.LingYueBot.functions.*;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.data.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 
 public class OperationInterpreter {
 
-    public static void execute(JSONObject replyObject, int num, MessageEvent event, JSONObject userObject, Contact contact, HashMap<String, Object> FunctionMap, long groupID) {
+    public static void execute(JSONObject replyObject, int num, MessageEvent event, Contact contact, HashMap<String, Object> FunctionMap, long groupID) {
         JSONArray reply = replyObject.getJSONArray("reply");
         JSONArray operation = replyObject.getJSONArray("operation");
         String conditionStr = replyObject.getJSONArray("condition").getString(num);
@@ -30,25 +30,29 @@ public class OperationInterpreter {
             conditionList.add(matcher.group().substring(1, matcher.group().length() - 1));
         }
         if (!conditionList.get(2).isEmpty()) {
-            String[] replyStrList = conditionList.get(2).split(",");
-            for (String s : replyStrList) {
-                executeReply(reply.getString(Integer.parseInt(s)), contact);
+            if (conditionList.get(2).equals("RAND")) {
+                executeReply(replyObject, reply.getString(new Random().nextInt(reply.size())), event, contact, FunctionMap, groupID);
+            } else {
+                String[] replyStrList = conditionList.get(2).split(",");
+                for (String s : replyStrList) {
+                    executeReply(replyObject, reply.getString(Integer.parseInt(s.trim())), event, contact, FunctionMap, groupID);
+                }
             }
         }
         if (!conditionList.get(3).isEmpty()) {
             String[] operationStrList = conditionList.get(3).split(",");
             for (String s : operationStrList) {
                 s = s.trim();
-                executeOperation(operation.getString(Integer.parseInt(s)), event, contact, userObject, FunctionMap, groupID);
+                executeOperation(operation.getString(Integer.parseInt(s)), event, contact, FunctionMap, groupID);
             }
         }
     }
 
     public static void execute(JSONObject replyObject, int num, MessageEvent event, HashMap<String, Object> functionMap, long groupID) {
-        execute(replyObject, num, event, CommonUserHandler.userInfo.getJSONObject(Long.toString(event.getSender().getId())), event.getSender(), functionMap, groupID);
+        execute(replyObject, num, event, event.getSender(), functionMap, groupID);
     }
 
-    public static void executeReply(JSONObject replyObject, String replyStr, MessageEvent event, Contact contact, JSONObject userObject, HashMap<String, Object> FunctionMap, long groupID) {
+    public static void executeReply(JSONObject replyObject, String replyStr, MessageEvent event, Contact contact, HashMap<String, Object> FunctionMap, long groupID) {
         String regex = "(\\[[^\\]]*\\])";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(replyStr);
@@ -57,14 +61,17 @@ public class OperationInterpreter {
         while (matcher.find()) {
             replyFunc.add(matcher.group().substring(1, matcher.group().length() - 1));
         }
-        executeReply(replyFunc.get(0), contact);
+        executeReply(replyFunc.get(0), contact, groupID);
         String[] operationList = replyFunc.get(1).split(",");
         for (String str : operationList) {
-            executeOperation(operation.getString(Integer.parseInt(str)), event, contact, userObject, FunctionMap, groupID);
+            try {
+                executeOperation(operation.getString(Integer.parseInt(str.trim())), event, contact, FunctionMap, groupID);
+            } catch (NumberFormatException ignore) {
+            }
         }
     }
 
-    public static void executeReply(String replyStr, Contact contact) {
+    public static void executeReply(String replyStr, Contact contact, long groupID) {
         String[] replyList = replyStr.split("&&");
         for (String str : replyList) {
             String[] reply = str.split("&");
@@ -84,7 +91,12 @@ public class OperationInterpreter {
                 }
                 if (replyItem.startsWith("IMG:")) {
                     System.out.println(replyItem.substring(4));
-                    SendPictures.sendPictures(new File(replyItem.substring(4)), contact);
+                    try {
+                        String type = ResourceDatabaseUtil.getResource(Integer.parseInt(replyItem.substring(4).trim()), groupID);
+                        SendPictures.sendPictures(type, contact, groupID);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             if (builder.size() != 0)
@@ -92,7 +104,7 @@ public class OperationInterpreter {
         }
     }
 
-    public static void executeOperation(String operation, MessageEvent event, Contact contact, JSONObject userObject, HashMap<String, Object> functionMap, long groupID) {
+    public static void executeOperation(String operation, MessageEvent event, Contact contact, HashMap<String, Object> functionMap, long groupID) {
 
         long operationID;
         try {
@@ -128,20 +140,32 @@ public class OperationInterpreter {
                 case "-Decline":
                     movingNum *= -1;
             }
-            userObject.put("like", userObject.getIntValue("like") + movingNum);
+            try {
+                UserDatabaseUtil.setUserInt(event.getSender().getId(), "favor",
+                        UserDatabaseUtil.getUserInt(event.getSender().getId(), "favor") + movingNum);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
         /* TODO: 获取数值 */
         if (instructionList[0].equals("Get")) {
             switch (instructionList[1]) {
                 case "-Like":
-                    response.add("，LingYue对你的好感度是" + userObject.getIntValue("like"));
-                    if (userObject.getIntValue("like") < 50) {
+                    int like;
+                    try {
+                        like = UserDatabaseUtil.getUserInt(event.getSender().getId(), "favor");
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                        break;
+                    }
+                    response.add("，LingYue对你的好感度是" + like);
+                    if (like < 50) {
                         response.add("，LingYue对你没什么感觉");
-                    } else if (userObject.getIntValue("like") < 100) {
+                    } else if (like < 100) {
                         response.add("，LingYue好像有点在意你呢~");
-                    } else if (userObject.getIntValue("like") < 150) {
+                    } else if (like < 150) {
                         response.add("，LingYue似乎挺喜欢和你在一起");
-                    } else if (userObject.getIntValue("like") < 200) {
+                    } else if (like < 200) {
                         response.add("，LingYue已经和你很亲密了！");
                     } else {
                         response.add("，LingYue最……最喜欢你了~");

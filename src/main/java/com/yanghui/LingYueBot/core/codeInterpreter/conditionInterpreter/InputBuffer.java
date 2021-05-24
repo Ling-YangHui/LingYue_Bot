@@ -1,6 +1,5 @@
 package com.yanghui.LingYueBot.core.codeInterpreter.conditionInterpreter;
 
-import com.alibaba.fastjson.JSONArray;
 import com.yanghui.LingYueBot.annotations.PoweredByMirai;
 import com.yanghui.LingYueBot.core.coreDatabaseUtil.UserDatabaseUtil;
 import net.mamoe.mirai.event.events.MessageEvent;
@@ -27,7 +26,7 @@ class InputBuffer {
     }
 
     @PoweredByMirai
-    public Node getNode(MessageEvent event, JSONArray replyList, HashMap<String, Object> botStatus) {
+    public Node getNode(MessageEvent event, HashMap<String, Object> botStatus) {
         String senderID = Long.toString(event.getSender().getId());
         long id = event.getSender().getId();
         String messageContent = event.getMessage().contentToString();
@@ -91,14 +90,14 @@ class InputBuffer {
                 break;
             case "isMale":
                 try {
-                    value = UserDatabaseUtil.getUserString(id, "gender").equals("男");
+                    value = UserDatabaseUtil.getUserShort(id, "gender") == 1;
                 } catch (SQLException e) {
                     value = false;
                 }
                 break;
             case "isFemale":
                 try {
-                    value = UserDatabaseUtil.getUserString(id, "gender").equals("女");
+                    value = UserDatabaseUtil.getUserShort(id, "gender") == -1;
                 } catch (SQLException e) {
                     value = false;
                 }

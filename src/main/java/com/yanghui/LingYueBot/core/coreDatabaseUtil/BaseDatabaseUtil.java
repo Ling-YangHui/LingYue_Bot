@@ -15,7 +15,7 @@ public class BaseDatabaseUtil {
             e.printStackTrace();
         }
         try {
-            connection = DriverManager.getConnection("jdbc:sqlserver://localhost:1433; sever=YangHui; DatabaseName=LingYue", "sa", "cayh121300");
+            connection = DriverManager.getConnection("jdbc:sqlserver://localhost:1433; sever=YangHui; DatabaseName=LingYue", "sa", "Cayh121300");
             System.out.println("数据库连接成功");
         } catch (Exception e) {
             e.printStackTrace();

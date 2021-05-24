@@ -14,7 +14,6 @@ public class AdministratorHandler extends UserMessageHandler {
         if (user == null || user.getId() != event.getSender().getId()) {
             return;
         }
-        String message = event.getMessage().contentToString();
     }
 
     @Override

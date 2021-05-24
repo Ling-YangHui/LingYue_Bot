@@ -14,6 +14,11 @@ public class SendPictures {
         Contact.Companion.sendImage(contact, file, fileName[fileName.length - 1]);
     }
 
+    public static void sendPictures(String type, Contact contact, long groupID) {
+        File file = new File("C://" + groupID + "." + type);
+        sendPictures(file, contact);
+    }
+
     /**
      * 从API中获取一张图片，然后发送这张图片
      *

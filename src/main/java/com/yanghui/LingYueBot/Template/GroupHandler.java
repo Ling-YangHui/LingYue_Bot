@@ -2,15 +2,16 @@ package com.yanghui.LingYueBot.Template;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.yanghui.LingYueBot.UserHandler.ParseUser;
 import com.yanghui.LingYueBot.core.codeInterpreter.conditionInterpreter.ConditionInterpreter;
 import com.yanghui.LingYueBot.core.codeInterpreter.operationInterperter.OperationInterpreter;
+import com.yanghui.LingYueBot.core.coreDatabaseUtil.ReplyDatabaseUtil;
+import com.yanghui.LingYueBot.core.coreDatabaseUtil.ScheduleDatabaseUtil;
 import com.yanghui.LingYueBot.core.coreDatabaseUtil.UserDatabaseUtil;
-import com.yanghui.LingYueBot.core.coreTools.JsonLoader;
 import com.yanghui.LingYueBot.core.messageHandler.GroupMessageHandler;
 import com.yanghui.LingYueBot.functions.DailyReport;
 import com.yanghui.LingYueBot.functions.DriftBottle;
 import com.yanghui.LingYueBot.functions.GetSystemInfo;
+import com.yanghui.LingYueBot.functions.Repeat;
 import net.mamoe.mirai.contact.User;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.Message;
@@ -24,11 +25,16 @@ import java.util.TimerTask;
 import java.util.Vector;
 
 public class GroupHandler extends GroupMessageHandler {
-    // 图片路径
-    public String picPath = "D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\pictureSrc";
 
-    public GroupHandler(String path, long groupID) {
-        super(path, groupID);
+    private final Object replyListLock = new Object();
+    private final Object repeatListLock = new Object();
+    private Vector<Long> userList;
+    private JSONArray replyList;
+    private JSONArray repeatList;
+
+    // 图片路径
+    public GroupHandler(long groupID) {
+        super(groupID);
         paramList.put("SuccessiveRepeat", false);
         paramList.put("LastMessage", "");
         configList.put("SuccessiveRepeat_Permission", true);
@@ -53,17 +59,22 @@ public class GroupHandler extends GroupMessageHandler {
                     return;
                 }
                 try {
-                    onDelete();
-                    onLoad();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                for (int i = 0; i < scheduleTaskList.size(); i++) {
-                    if (nowTime.equals(scheduleTaskList.getJSONObject(i).getString("time"))) {
-                        if (group != null) {
-                            OperationInterpreter.executeReply(scheduleTaskList.getJSONObject(i).getString("message"), group);
+                    synchronized (replyListLock) {
+                        replyList = ReplyDatabaseUtil.getReply(groupID);
+                    }
+                    synchronized (repeatListLock) {
+                        repeatList = Repeat.getRepeat(groupID);
+                    }
+                    JSONArray scheduleArray = ScheduleDatabaseUtil.getSchedule(groupID);
+                    for (int i = 0; i < scheduleArray.size(); i++) {
+                        if (nowTime.equals(scheduleArray.getJSONObject(i).getString("time"))) {
+                            if (group != null) {
+                                OperationInterpreter.executeReply(scheduleArray.getJSONObject(i).getString("message"), group, groupID);
+                            }
                         }
                     }
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
                 pastTime[0] = nowTime;
             }
@@ -103,24 +114,17 @@ public class GroupHandler extends GroupMessageHandler {
 
     @Override
     public void onDelete() throws Exception {
-        JsonLoader.saveJSONObject(rootPath, "user.json", userList);
+
     }
 
     public void onLoad() throws Exception {
         /* TODO：json读取 */
-        // 读取自动复读
-        repeatList = JsonLoader.jsonArrayLoader(rootPath + "repeatList.json");
-        // 读取特殊语句回复
-        replyList = JsonLoader.jsonArrayLoader(rootPath + "specialRepeatList.json");
-        replyList.addAll(JsonLoader.jsonArrayLoader("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\Group\\globalSpecialRepeat.json"));
-        // 读取用户信息
-        userList = JsonLoader.jsonObjectLoader(rootPath + "user.json");
-        // 读取定时任务列表
-        scheduleTaskList = JsonLoader.jsonArrayLoader(rootPath + "scheduleTask.json");
-        scheduleTaskList.addAll(JsonLoader.jsonArrayLoader("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiResources\\LingYue_resources\\Group\\globalSpecialSchedule.json"));
-        // 读取漂流瓶
         driftBottle = new DriftBottle(groupID);
         functionMap.put("DriftBottle", driftBottle);
+
+        userList = UserDatabaseUtil.getUserList();
+        replyList = ReplyDatabaseUtil.getReply(groupID);
+        repeatList = Repeat.getRepeat(groupID);
     }
 
     public void administratorInstructionHandler(GroupMessageEvent event) {
@@ -233,21 +237,12 @@ public class GroupHandler extends GroupMessageHandler {
         group = event.getGroup();
         User user = event.getSender();
         long senderID = event.getSender().getId();
-        /* 数据列表存在性认证 */
-        if (userList.get(senderID + "") == null)
-            userList.put(senderID + "", ParseUser.ParseJSONFromUser(event.getSender()));
-        else if (!userList.getJSONObject(senderID + "").getString("nick").equals(event.getSenderName())) {
-            userList.getJSONObject(senderID + "").put("nick", event.getSenderName());
-            System.out.println("添加用户" + event.getSenderName());
-        }
 
         /* 数据库操作 */
         try {
-            if (!UserDatabaseUtil.getUserExist(senderID)) {
+            if (!userList.contains(event.getSender().getId())) {
                 UserDatabaseUtil.insertUser(event.getSender());
                 System.out.println("INSERT USER" + event.getSenderName());
-            } else if (!UserDatabaseUtil.getUserString(senderID, "userName").equals(user.getNick())) {
-                UserDatabaseUtil.setUserString(senderID, "userName", user.getNick());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -262,22 +257,24 @@ public class GroupHandler extends GroupMessageHandler {
         /* TODO：自动复读 */
 
         boolean isRepeat = false;
-        for (int i = 0; i < repeatList.size(); i++) {
-            // 获取字符串对象
-            String str = repeatList.getString(i);
-            if (str.equals(messageContent)) {
-                // 设置当前处于复读状态
-                isRepeat = true;
-                if (!((boolean) paramList.get("SuccessiveRepeat")) && messageContent.equals(paramList.get("LastMessage"))) {
-                    group.sendMessage(message);
-                    // 设置连续复读标志位
-                    paramList.put("SuccessiveRepeat", true);
+        synchronized (repeatListLock) {
+            for (int i = 0; i < repeatList.size(); i++) {
+                // 获取字符串对象
+                String str = repeatList.getString(i);
+                if (str.equals(messageContent)) {
+                    // 设置当前处于复读状态
+                    isRepeat = true;
+                    if (!((boolean) paramList.get("SuccessiveRepeat")) && messageContent.equals(paramList.get("LastMessage"))) {
+                        group.sendMessage(message);
+                        // 设置连续复读标志位
+                        paramList.put("SuccessiveRepeat", true);
+                    }
                 }
             }
-        }
-        if (!isRepeat) {
-            // 如果不是复读状态，那么就退出禁止复读模式
-            paramList.put("SuccessiveRepeat", false);
+            if (!isRepeat) {
+                // 如果不是复读状态，那么就退出禁止复读模式
+                paramList.put("SuccessiveRepeat", false);
+            }
         }
     }
 
@@ -285,31 +282,32 @@ public class GroupHandler extends GroupMessageHandler {
         Message message = event.getMessage();
         String messageText = message.contentToString();
         long senderID = event.getSender().getId();
-        JSONObject replyObject;
-        for (int i = 0; i < replyList.size(); i++) {
-            replyObject = replyList.getJSONObject(i);
-            JSONArray trigMessage = replyObject.getJSONArray("trigMessage");
-            boolean hasTrig = false;
-            for (int j = 0; j < trigMessage.size(); j++) {
-                if (messageText.contains(trigMessage.getString(j))) {
-                    hasTrig = true;
-                    break;
+        synchronized (replyListLock) {
+            for (int i = 0; i < replyList.size(); i++) {
+                JSONObject replyObject = replyList.getJSONObject(i);
+                JSONArray trigMessage = replyObject.getJSONArray("trigMessage");
+                boolean hasTrig = false;
+                for (int j = 0; j < trigMessage.size(); j++) {
+                    if (messageText.contains(trigMessage.getString(j))) {
+                        hasTrig = true;
+                        break;
+                    }
                 }
-            }
-            if (!hasTrig)
-                continue;
-            boolean conditionSatisfied = false;
-            int satisfiedNum = -1;
-            for (int j = 0; j < replyObject.getJSONArray("condition").size(); j++) {
-                conditionSatisfied = ConditionInterpreter.getConditionSatisfied(replyObject.getJSONArray("condition"), j, event, replyList, configList);
-                if (conditionSatisfied) {
-                    satisfiedNum = j;
-                    break;
+                if (!hasTrig)
+                    continue;
+                boolean conditionSatisfied = false;
+                int satisfiedNum = -1;
+                for (int j = 0; j < replyObject.getJSONArray("condition").size(); j++) {
+                    conditionSatisfied = ConditionInterpreter.getConditionSatisfied(replyObject.getJSONArray("condition"), j, event, configList);
+                    if (conditionSatisfied) {
+                        satisfiedNum = j;
+                        break;
+                    }
                 }
+                if (!conditionSatisfied)
+                    continue;
+                OperationInterpreter.execute(replyObject, satisfiedNum, event, group, functionMap, groupID);
             }
-            if (!conditionSatisfied)
-                continue;
-            OperationInterpreter.execute(replyObject, satisfiedNum, event, userList.getJSONObject(senderID + ""), group, functionMap, groupID);
         }
     }
 }

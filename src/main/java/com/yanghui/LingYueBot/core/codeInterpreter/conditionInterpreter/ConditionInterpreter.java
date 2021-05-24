@@ -1,7 +1,6 @@
 package com.yanghui.LingYueBot.core.codeInterpreter.conditionInterpreter;
 
 import com.alibaba.fastjson.JSONArray;
-import com.yanghui.LingYueBot.UserHandler.CommonUserHandler;
 import net.mamoe.mirai.event.events.MessageEvent;
 
 import java.util.*;
@@ -10,7 +9,7 @@ import java.util.regex.Pattern;
 
 public class ConditionInterpreter {
 
-    public static boolean getConditionSatisfied(JSONArray conditionArray, int index, MessageEvent event, JSONArray replyList, HashMap<String, Object> botStatus) {
+    public static boolean getConditionSatisfied(JSONArray conditionArray, int index, MessageEvent event, HashMap<String, Object> botStatus) {
         String regex = "(\\[[^\\]]*\\])";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(conditionArray.getString(index));
@@ -20,22 +19,19 @@ public class ConditionInterpreter {
         }
         String nextConditionStr = conditionStr.get(1);
         String[] nextConditionList = nextConditionStr.split(",");
-        boolean result_1 = getSelfConditionSatisfied(conditionStr.get(0) + "=", event, replyList, botStatus);
+        boolean result_1 = getSelfConditionSatisfied(conditionStr.get(0) + "=", event, botStatus);
         boolean result_2 = true;
         /* 如果没有接下来的连接那就直接结束 */
         if (nextConditionStr.isEmpty())
             return result_1;
         for (String s : nextConditionList) {
-            result_2 &= getConditionSatisfied(conditionArray, Integer.parseInt(s), event, replyList, botStatus);
+            result_2 &= getConditionSatisfied(conditionArray, Integer.parseInt(s), event, botStatus);
         }
         return result_1 & result_2;
     }
 
-    public static boolean getConditionSatisfied(JSONArray conditionArray, int index, MessageEvent event) {
-        return getConditionSatisfied(conditionArray, index, event, CommonUserHandler.replyList, CommonUserHandler.botStatus);
-    }
 
-    public static boolean getSelfConditionSatisfied(String condition, MessageEvent event, JSONArray replyList, HashMap<String, Object> botStatus) {
+    public static boolean getSelfConditionSatisfied(String condition, MessageEvent event, HashMap<String, Object> botStatus) {
         Stack<Node.Sign> signStack = new Stack<>();
         Stack<Boolean> valueStack = new Stack<>();
         InputBuffer buffer = new InputBuffer(condition);
@@ -43,7 +39,7 @@ public class ConditionInterpreter {
         Node.Sign s;
         do {
             s = null;
-            node = buffer.getNode(event, replyList, botStatus);
+            node = buffer.getNode(event, botStatus);
             if (node.type == Node.NodeType.VALUE)
                 valueStack.push(node.value);
             else {
