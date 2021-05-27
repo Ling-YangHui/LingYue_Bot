@@ -208,6 +208,21 @@ public class GroupHandler extends GroupMessageHandler {
                     }
                     break;
             }
+            if (messageContent.contains("LingYue -ban")) {
+                String[] list = messageContent.split(" ");
+                try {
+                    UserDatabaseUtil.setUserBoolean(Long.parseLong(list[2]), "isForbidden", true);
+                } catch (SQLException e) {
+                    group.sendMessage("设置失败");
+                }
+            } else if (messageContent.contains("LingYue -unban")) {
+                String[] list = messageContent.split(" ");
+                try {
+                    UserDatabaseUtil.setUserBoolean(Long.parseLong(list[2]), "isForbidden", false);
+                } catch (SQLException e) {
+                    group.sendMessage("设置失败");
+                }
+            }
         }
     }
 
@@ -217,9 +232,9 @@ public class GroupHandler extends GroupMessageHandler {
         long senderID = event.getSender().getId();
         if (messageContent.contains("LingYue -remove bottle")) {
             System.out.println(messageContent.split(" ", 4)[3]);
-            Vector<JSONObject> remove = null;
+            Vector<JSONObject> remove;
             try {
-                remove = driftBottle.removeBottle(" " + messageContent.split(" ", 4)[3], event.getSender().getId());
+                remove = driftBottle.removeBottle(messageContent.split(" ", 4)[3], event.getSender().getId());
                 group.sendMessage("---删除列表---\n" + remove);
             } catch (SQLException e) {
                 group.sendMessage("数据库错误，删除失败");
@@ -240,8 +255,9 @@ public class GroupHandler extends GroupMessageHandler {
 
         /* 数据库操作 */
         try {
-            if (!userList.contains(event.getSender().getId())) {
+            if (!userList.contains(senderID)) {
                 UserDatabaseUtil.insertUser(event.getSender());
+                userList.add(senderID);
                 System.out.println("INSERT USER" + event.getSenderName());
             }
         } catch (Exception e) {

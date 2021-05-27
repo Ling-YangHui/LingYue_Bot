@@ -10,7 +10,7 @@ public class Install {
     public static void main(String[] args) {
         try {
             FileInputStream inputStream = new FileInputStream("D:\\IntelliJ IDEA programming\\MiraiBot\\build\\mirai\\LingYue.mirai.jar");
-            FileOutputStream outputStream = new FileOutputStream("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiCore\\plugins\\LingYue.mirai.jar");
+            FileOutputStream outputStream = new FileOutputStream("E:\\LingYue.mirai.jar");
             byte[] buf = new byte[1024];
             int bytesRead;
             while ((bytesRead = inputStream.read(buf)) != -1) {

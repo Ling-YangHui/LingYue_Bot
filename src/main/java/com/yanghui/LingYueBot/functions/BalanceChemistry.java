@@ -6,6 +6,12 @@ import java.io.InputStreamReader;
 
 public class BalanceChemistry {
 
+    /**
+     * 化学平衡
+     *
+     * @param str 需要配平的方程式
+     * @throws IOException 读取python流错误
+     */
     public static String balanceChemistry(String str) throws IOException {
         if (str.equals("--help")) {
             return "运行格式：\n@Bot(空格)配平(空格)方程式\n方程式可以是直接用等号连接，也可以用分号进行模糊匹配，如H2;O2;H2O，元素符号必须要保证正确";

@@ -11,6 +11,12 @@ import java.sql.SQLException;
 
 public class DailyReport extends BaseDatabaseUtil {
 
+    /**
+     * 汇报当天群组内任务执行情况
+     *
+     * @param handler 群管理句柄
+     * @throws SQLException 查询SQL失败
+     */
     public static void dailyReport(GroupHandler handler) throws SQLException {
         MessageChainBuilder builder = new MessageChainBuilder();
         String sql = "SELECT COUNT(id) FROM Operation\n" +

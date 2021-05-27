@@ -9,6 +9,11 @@ import java.util.Vector;
 
 public class GetSystemInfo {
 
+    /**
+     * 获取系统状态
+     *
+     * @return 返回系统状态列表
+     */
     public static Vector<String> getSystemInfo() {
         try {
             Runtime rt = Runtime.getRuntime();
@@ -35,9 +40,5 @@ public class GetSystemInfo {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public static void main(String[] args) {
-        System.out.println(getSystemInfo());
     }
 }

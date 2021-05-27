@@ -39,6 +39,8 @@ public class ParseOperationCode {
                 return 50;
             case "MoePic":
                 return 60;
+            case "RandSeed":
+                return 70;
             default:
                 return -1;
         }

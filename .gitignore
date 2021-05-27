@@ -1,3 +1,6 @@
 .gradle
 .idea
 build
+LingYue.mdf
+LingYue_log.ldf
+src/db

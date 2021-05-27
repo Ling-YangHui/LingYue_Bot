@@ -9,6 +9,13 @@ import java.sql.SQLException;
 
 public class Repeat extends BaseDatabaseUtil {
 
+    /**
+     * 获取复读的列表
+     *
+     * @param groupID QQ群号
+     * @return 复读内容的json列表
+     * @throws SQLException 查询SQL失败
+     */
     public static JSONArray getRepeat(long groupID) throws SQLException {
         JSONArray returnValue = new JSONArray();
         String sql = "SELECT * FROM Repeat " +
@@ -18,7 +25,7 @@ public class Repeat extends BaseDatabaseUtil {
         ResultSet resultSet = statement.executeQuery();
         resultSet.next();
         while (resultSet.next())
-            returnValue.add(resultSet.getString("content"));
+            returnValue.add(resultSet.getString("repeatContent"));
         statement.close();
         return returnValue;
     }

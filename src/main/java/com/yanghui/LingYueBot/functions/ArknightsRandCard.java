@@ -42,6 +42,13 @@ public class ArknightsRandCard extends BaseDatabaseUtil {
         six.removeAll(priority);
     }
 
+    /**
+     * 抽卡
+     *
+     * @param num   抽卡数量
+     * @param treat 作弊幅度，数值小于1
+     * @throws Exception 抽卡数量不符合要求
+     */
     public static Vector<Vector<String>> rand(int num, double treat) throws Exception {
         double[] possibility = {0.02 + treat, 0.1 + treat, 0.6 + treat, 1 + treat};
         if (num > 100 || num <= 0)
