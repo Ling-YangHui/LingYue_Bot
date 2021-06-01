@@ -9,6 +9,15 @@ import java.sql.SQLException;
 
 public class ResourceDatabaseUtil extends BaseDatabaseUtil {
 
+    /**
+     * 从数据库中获取资源
+     *
+     * @param id      资源id
+     * @param groupID 群组名称
+     * @return 资源的类型
+     * @throws SQLException 查询SQL失败
+     * @throws IOException  缓存文件写入失败
+     */
     public static String getResource(int id, long groupID) throws SQLException, IOException {
         String sql = "SELECT * FROM Resource " +
                 "WHERE id = ?";

@@ -9,6 +9,13 @@ import java.sql.SQLException;
 
 public class ReplyDatabaseUtil extends BaseDatabaseUtil {
 
+    /**
+     * 获取回复事件表
+     *
+     * @param groupID QQ群号
+     * @return 回复事件表
+     * @throws SQLException 查询SQL失败
+     */
     public static JSONArray getReply(long groupID) throws SQLException {
         JSONArray returnValue = new JSONArray();
         String sql = "SELECT * FROM Reply " +

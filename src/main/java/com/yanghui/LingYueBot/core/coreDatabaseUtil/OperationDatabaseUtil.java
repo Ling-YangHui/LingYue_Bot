@@ -11,6 +11,15 @@ import java.util.Date;
 
 public class OperationDatabaseUtil extends BaseDatabaseUtil {
 
+    /**
+     * 新增操作记录
+     *
+     * @param operation 操作代码
+     * @param event     操作事件
+     * @param groupID   操作群
+     * @return 操作事件id
+     * @throws SQLException 查询SQL错误
+     */
     public static long insertOperation(String operation, MessageEvent event, long groupID) throws SQLException {
         String sql = "INSERT INTO Operation VALUES (?, ?, ?, ?, ?)";
         PreparedStatement statement = getStatement(sql);
@@ -25,6 +34,12 @@ public class OperationDatabaseUtil extends BaseDatabaseUtil {
         return num + 1;
     }
 
+    /**
+     * 获取事件id
+     *
+     * @return 新增事件操作id
+     * @throws SQLException 查询SQL错误
+     */
     public static long getOperationNum() throws SQLException {
         String sql = "SELECT * FROM Operation";
         PreparedStatement statement = BaseDatabaseUtil.getStatement(sql);

@@ -10,6 +10,13 @@ import java.text.SimpleDateFormat;
 
 public class ScheduleDatabaseUtil extends BaseDatabaseUtil {
 
+    /**
+     * 获取计划事件表
+     *
+     * @param groupID QQ群号
+     * @return 计划事件表
+     * @throws SQLException 查询SQL错误
+     */
     public static JSONArray getSchedule(long groupID) throws SQLException {
         JSONArray returnValue = new JSONArray();
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");

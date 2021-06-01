@@ -45,7 +45,8 @@ public class SendPictures {
                 "https://api.dongmanxingkong.com/suijitupian/acg/1080p/index.php",
                 "https://api.vvhan.com/api/acgimg",
                 "https://www.dmoe.cc/random.php",
-                "https://api.ghser.com/random/api.php"};
+                "https://api.ghser.com/random/api.php",
+                "https://api.ixiaowai.cn/api/api.php"};
         InputStream inputStream = getImageFromURL(url[new Random().nextInt(url.length)]);
         Contact.Companion.sendImage(contact, inputStream, "jpg");
         inputStream.close();
