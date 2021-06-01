@@ -10,6 +10,12 @@ import java.util.Vector;
 
 public class UserDatabaseUtil extends BaseDatabaseUtil {
 
+    /**
+     * 获取用户的QQ号列表
+     *
+     * @return 用户的QQ号列表
+     * @throws SQLException 查询SQL失败
+     */
     public static Vector<Long> getUserList() throws SQLException {
         Vector<Long> result = new Vector<>();
         String sql = "SELECT id FROM Users";
@@ -21,6 +27,13 @@ public class UserDatabaseUtil extends BaseDatabaseUtil {
         return result;
     }
 
+    /**
+     * 选择一个用户并且返回它的statement
+     *
+     * @param id 用户的QQ号
+     * @return statement
+     * @throws SQLException 查询SQL失败
+     */
     public static PreparedStatement selectUser(long id) throws SQLException {
         Vector<Object> result = new Vector<>();
         String sql = "SELECT * FROM Users WHERE id = ?";
@@ -29,6 +42,13 @@ public class UserDatabaseUtil extends BaseDatabaseUtil {
         return statement;
     }
 
+    /**
+     * 查询用户是否存在
+     *
+     * @param id 用户QQ号
+     * @return 返回用户是否存在
+     * @throws SQLException 查询SQL失败
+     */
     public static boolean getUserExist(long id) throws SQLException {
         PreparedStatement statement = selectUser(id);
         ResultSet resultSet = statement.executeQuery();
@@ -38,6 +58,14 @@ public class UserDatabaseUtil extends BaseDatabaseUtil {
         return result;
     }
 
+    /**
+     * 获取用户的一个整数类型属性
+     *
+     * @param id  用户QQ号
+     * @param key 属性列名
+     * @return 返回的整数
+     * @throws SQLException 查询SQL失败
+     */
     public static int getUserInt(long id, String key) throws SQLException {
         String sql = "SELECT " + key + " FROM Users WHERE id = ?";
         PreparedStatement statement = getStatement(sql);
@@ -49,6 +77,14 @@ public class UserDatabaseUtil extends BaseDatabaseUtil {
         return result;
     }
 
+    /**
+     * 设置用户的一个整数类型
+     *
+     * @param id    用户QQ号
+     * @param key   属性列名
+     * @param value 需要设置的数值
+     * @throws SQLException 查询SQL失败
+     */
     public static void setUserInt(long id, String key, int value) throws SQLException {
         String sql = "UPDATE Users SET " + key + " = ? WHERE id = ?";
         PreparedStatement statement = getStatement(sql);
@@ -58,6 +94,14 @@ public class UserDatabaseUtil extends BaseDatabaseUtil {
         statement.close();
     }
 
+    /**
+     * 获取用户字符串
+     *
+     * @param id  用户QQ号
+     * @param key 属性列名
+     * @return 对应字符串
+     * @throws SQLException 查询SQL失败
+     */
     public static String getUserString(long id, String key) throws SQLException {
         String sql = "SELECT " + key + " FROM Users WHERE id = ?";
         PreparedStatement statement = getStatement(sql);

@@ -97,6 +97,12 @@ public class ArknightsRandCard extends BaseDatabaseUtil {
         return result;
     }
 
+    /**
+     * 抽一张卡，这个方法被抽卡调用num次
+     *
+     * @param possibility 概率表
+     * @return 抽卡结果
+     */
     private static String randOne(double[] possibility) {
         int randCache = new Random().nextInt(100);
         if (randCache < possibility[0] * 100) { // 6星
@@ -139,10 +145,22 @@ public class ArknightsRandCard extends BaseDatabaseUtil {
         }
     }
 
+    /**
+     * 判断是否为六星干员
+     *
+     * @param name 干员名字
+     * @return 是否为六星
+     */
     public static boolean isSixStar(String name) {
         return upSix.contains(name) || priority.contains(name) || six.contains(name);
     }
 
+    /**
+     * 获取干员星级
+     *
+     * @param name 干员名字
+     * @return 星级
+     */
     private static int getStar(String name) {
         if (isSixStar(name))
             return 6;
@@ -153,6 +171,14 @@ public class ArknightsRandCard extends BaseDatabaseUtil {
         return 3;
     }
 
+    /**
+     * 将抽卡结果写入数据库
+     *
+     * @param operationID 操作码，用于写入数据库
+     * @param event       事件句柄，用于获取用户信息
+     * @param result      抽卡结果
+     * @throws SQLException 查询SQL错误
+     */
     public static void addRandRecord(long operationID, MessageEvent event, Vector<Vector<String>> result) throws SQLException {
         String sql = "INSERT INTO RandCard VALUES (?,?,?,?,?)";
         PreparedStatement statement = getStatement(sql);

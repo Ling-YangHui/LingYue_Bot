@@ -10,7 +10,6 @@ import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.data.*;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -306,8 +305,9 @@ public class OperationInterpreter {
             case "Satellite":
                 response.add(new At(event.getSender().getId()));
                 try {
-                    response.add(new PlainText("\n" + SatelliteGetPosition.satelliteGetPosition(instructionList[1])));
-                } catch (IOException e) {
+                    String name = event.getMessage().contentToString().replace("@3598326822 卫星", "").trim();
+                    response.add(new PlainText("\n" + SatelliteGetPosition.satelliteGetPosition(name)));
+                } catch (Exception e) {
                     response.add(new PlainText("\n发生错误了"));
                 }
                 contact.sendMessage(response.asMessageChain());

@@ -231,7 +231,7 @@ public class DriftBottle extends BaseDatabaseUtil {
      */
     public long getBottleNum() throws SQLException {
         String sql = "SELECT * FROM DriftBottle " +
-                "WHERE groupID = ?";
+                "WHERE groupID = ? AND restPick > 0";
         PreparedStatement statement = getStatement(sql);
         statement.setLong(1, groupID);
         ResultSet resultSet = statement.executeQuery();

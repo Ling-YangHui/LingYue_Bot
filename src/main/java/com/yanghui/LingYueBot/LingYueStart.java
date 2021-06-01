@@ -1,5 +1,6 @@
 package com.yanghui.LingYueBot;
 
+import com.yanghui.LingYueBot.Template.GroupHandler;
 import com.yanghui.LingYueBot.core.coreDatabaseUtil.BaseDatabaseUtil;
 import com.yanghui.LingYueBot.core.messageHandler.GroupMessageHandler;
 import com.yanghui.LingYueBot.core.messageHandler.UserMessageHandler;
@@ -66,6 +67,8 @@ public class LingYueStart extends JavaPlugin {
         groupHandlerHashMap.put(1121098457L, new BeiShiCheDui());
         groupHandlerHashMap.put(904280379L, new BingShuJu());
         groupHandlerHashMap.put(541674751L, new DaShiTang());
+        groupHandlerHashMap.put(573145769L, new GroupHandler(573145769L));
+        groupHandlerHashMap.put(583880103L, new GroupHandler(583880103L));
         for (GroupMessageHandler handler : groupHandlerHashMap.values()) {
             try {
                 handler.onCreate();

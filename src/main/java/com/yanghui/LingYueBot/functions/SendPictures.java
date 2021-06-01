@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Random;
 
 public class SendPictures {
 
@@ -40,10 +41,27 @@ public class SendPictures {
      * @throws IOException 启动URL失败
      */
     public static void sendPicturesFromInternet(Contact contact) throws IOException {
-        URL site = new URL("https://api.dongmanxingkong.com/suijitupian/acg/1080p/index.php");
-        URLConnection con = site.openConnection();
-        con.setConnectTimeout(5000);
-        InputStream inputStream = con.getInputStream();
+        String[] url = {
+                "https://api.dongmanxingkong.com/suijitupian/acg/1080p/index.php",
+                "https://api.vvhan.com/api/acgimg",
+                "https://www.dmoe.cc/random.php",
+                "https://api.ghser.com/random/api.php"};
+        InputStream inputStream = getImageFromURL(url[new Random().nextInt(url.length)]);
         Contact.Companion.sendImage(contact, inputStream, "jpg");
+        inputStream.close();
+    }
+
+    /**
+     * 从URL中获取一个输入流
+     *
+     * @param url url
+     * @return 输入流
+     * @throws IOException 网络IO错误
+     */
+    private static InputStream getImageFromURL(String url) throws IOException {
+        URL site = new URL(url);
+        URLConnection connection = site.openConnection();
+        connection.setConnectTimeout(5000);
+        return connection.getInputStream();
     }
 }

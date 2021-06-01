@@ -4,9 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.yanghui.LingYueBot.core.codeInterpreter.conditionInterpreter.ConditionInterpreter;
 import com.yanghui.LingYueBot.core.codeInterpreter.operationInterperter.OperationInterpreter;
-import com.yanghui.LingYueBot.core.coreDatabaseUtil.ReplyDatabaseUtil;
-import com.yanghui.LingYueBot.core.coreDatabaseUtil.ScheduleDatabaseUtil;
-import com.yanghui.LingYueBot.core.coreDatabaseUtil.UserDatabaseUtil;
+import com.yanghui.LingYueBot.core.coreDatabaseUtil.*;
 import com.yanghui.LingYueBot.core.messageHandler.GroupMessageHandler;
 import com.yanghui.LingYueBot.functions.DailyReport;
 import com.yanghui.LingYueBot.functions.DriftBottle;
@@ -14,9 +12,14 @@ import com.yanghui.LingYueBot.functions.GetSystemInfo;
 import com.yanghui.LingYueBot.functions.Repeat;
 import net.mamoe.mirai.contact.User;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
+import net.mamoe.mirai.message.data.Image;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -221,6 +224,41 @@ public class GroupHandler extends GroupMessageHandler {
                     UserDatabaseUtil.setUserBoolean(Long.parseLong(list[2]), "isForbidden", false);
                 } catch (SQLException e) {
                     group.sendMessage("设置失败");
+                }
+            }
+            if (messageContent.contains("LingYue -inputResource")) {
+                try {
+                    short type = Short.parseShort(messageContent.split("@")[1]);
+                    for (int i = 0; i < message.size(); i++) {
+                        System.out.println(message.get(i).getClass());
+                        System.out.println(Image.class.isAssignableFrom(message.get(i).getClass()));
+                        if (Image.class.isAssignableFrom(message.get(i).getClass())) {
+                            URL url = new URL(Image.queryUrl((Image) message.get(i)));
+                            URLConnection con = url.openConnection();
+                            con.setConnectTimeout(5000);
+                            InputStream inputStream = con.getInputStream();
+                            ResourceDatabaseUtil.inputResource(inputStream, type);
+                            inputStream.close();
+                            group.sendMessage("写入成功");
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    if (e.getClass().equals(SQLException.class)) {
+                        group.sendMessage("数据库写入错误");
+                    } else
+                        group.sendMessage("连接查询错误");
+                }
+            }
+            if (messageContent.contains("LingYue -execute SQL")) {
+                String sql = messageContent.substring(20);
+                try {
+                    PreparedStatement statement = BaseDatabaseUtil.getStatement(sql);
+                    statement.execute();
+                    statement.close();
+                    group.sendMessage("执行完毕");
+                } catch (SQLException e) {
+                    group.sendMessage("执行错误");
                 }
             }
         }

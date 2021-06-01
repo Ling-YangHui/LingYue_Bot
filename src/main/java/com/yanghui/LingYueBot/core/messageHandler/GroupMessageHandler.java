@@ -6,6 +6,12 @@ import net.mamoe.mirai.event.events.GroupMessageEvent;
 
 import java.util.HashMap;
 
+/**
+ * 群组管理句柄的所有父类，需要实现初始化、消息管理、退出三个方法
+ * 此处有一个方法的具体实现
+ *
+ * @see com.yanghui.LingYueBot.Template.GroupHandler
+ */
 public abstract class GroupMessageHandler {
 
     public long groupID;

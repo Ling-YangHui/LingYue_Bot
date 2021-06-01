@@ -36,4 +36,37 @@ public class ResourceDatabaseUtil extends BaseDatabaseUtil {
         return type;
     }
 
+    /**
+     * 输入文件资源
+     *
+     * @param stream 数据流
+     * @param type   数据文件类型
+     * @throws SQLException 查询SQL失败
+     */
+    public static void inputResource(InputStream stream, short type) throws SQLException {
+        String sql = "INSERT INTO Resource VALUES(?, ?, ?)";
+        PreparedStatement statement = getStatement(sql);
+        statement.setInt(1, getResourceNum() + 1);
+        statement.setShort(2, type);
+        statement.setBinaryStream(3, stream);
+        statement.executeUpdate();
+        statement.close();
+    }
+
+    /**
+     * 查找资源总数量
+     *
+     * @return 资源数量
+     * @throws SQLException 查询SQL失败
+     */
+    public static int getResourceNum() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM Resource";
+        PreparedStatement statement = getStatement(sql);
+        ResultSet resultSet = statement.executeQuery();
+        resultSet.next();
+        int returnValue = resultSet.getInt(1);
+        statement.close();
+        return returnValue;
+    }
+
 }
