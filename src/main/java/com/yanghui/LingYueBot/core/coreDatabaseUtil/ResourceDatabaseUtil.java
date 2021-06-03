@@ -53,7 +53,7 @@ public class ResourceDatabaseUtil extends BaseDatabaseUtil {
      * @throws SQLException 查询SQL失败
      */
     public static void inputResource(InputStream stream, short type) throws SQLException {
-        String sql = "INSERT INTO Resource VALUES(?, ?, ?)";
+        String sql = "INSERT INTO Resource (id, type, resource) VALUES(?, ?, ?)";
         PreparedStatement statement = getStatement(sql);
         statement.setInt(1, getResourceNum() + 1);
         statement.setShort(2, type);

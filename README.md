@@ -2,13 +2,16 @@
 
 ## 简介
 
-当前版本 Version 3.0.0-RC update 0601
+当前版本 Version 3.1.0-RC update 0603
 
 这是一个使用[Mirai](https://github.com/mamoe/mirai) 框架搭建的小型QQ群bot项目，当前支持自动回复、好感度（数值系统）、自动复读、特殊成员以及一定的管理员操作能力，具体的操作方法见下文。
 
 本项目由[YangHui](https://github.com/Ling-YangHui) 管理构建。
 
 ## 新特性一览
+
+版本 3.1.0-RC\
+加入了漂流瓶点赞功能，使用“好瓶子”或者“好瓶子 id”来点赞瓶子
 
 版本 3.0.0-RC\
 从这个版本开始，LingYue所有的数据将不会在json中存储，转而使用基于SQLServer的数据库。但是LingYue使用的指令集依然使用Json进行存储，以方便随时修改和调整。
@@ -122,9 +125,11 @@ API:
 
 ## 版本日志
 
-2020/5/24 &emsp; 3.1.0-RC: 完全使用数据库构造，已经上线阿里云服务器。
+2020/6/3 &emsp; 3.1.0-RC: 加入了漂流瓶点赞功能，卫星位置查询功能修正
 
-2020/5/22 &emsp; 3.0.0-RC: 基于SQLServer的LingYue版本上线
+2020/5/24 &emsp; 3.0.0-RC: 完全使用数据库构造，已经上线阿里云服务器。
+
+2020/5/22 &emsp; 3.0.0-Alpha: 基于SQLServer的LingYue版本上线
 
 2020/5/13 &emsp; 2.1.3-RC: 明日方舟模拟抽卡功能上线，化学式配平、卫星位置查询功能上线
 
@@ -147,7 +152,9 @@ API:
 ## 版权信息
 
 CopyRight (2020-?) @YangHui · BUAA &emsp; @LingDong · SEU\
-YangHui, LingDong &emsp;&emsp;IceData 凌月开发组
+YangHui, LingDong
+
+IceData 凌月开发组
 
 本项目基于[Mirai](https://github.com/mamoe/mirai) 框架搭建
 

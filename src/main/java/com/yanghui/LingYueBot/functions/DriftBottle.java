@@ -2,6 +2,8 @@ package com.yanghui.LingYueBot.functions;
 
 import com.alibaba.fastjson.JSONObject;
 import com.yanghui.LingYueBot.core.coreDatabaseUtil.BaseDatabaseUtil;
+import com.yanghui.LingYueBot.core.coreDatabaseUtil.OperationDatabaseUtil;
+import net.mamoe.mirai.event.events.MessageEvent;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -37,8 +39,8 @@ public class DriftBottle extends BaseDatabaseUtil {
             return;
         if (newBottle.getString("message").isEmpty())
             return;
-        String sql = "INSERT INTO DriftBottle " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO DriftBottle (operationID, senderID, bottleContent, GroupID, restPick, sendTime, giveLike)" +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)";
         PreparedStatement statement = getStatement(sql);
         statement.setLong(1, operationID);
         statement.setLong(2, newBottle.getLong("senderID"));
@@ -46,6 +48,7 @@ public class DriftBottle extends BaseDatabaseUtil {
         statement.setLong(4, 0);
         statement.setShort(5, (short) 2);
         statement.setTimestamp(6, new Timestamp(new Date().getTime()));
+        statement.setInt(7, 0);
         statement.executeUpdate();
         statement.close();
     }
@@ -53,10 +56,12 @@ public class DriftBottle extends BaseDatabaseUtil {
     /**
      * 接收全局漂流瓶
      *
+     * @param operationID 操作ID
+     * @param event       消息事件句柄
      * @return 漂流瓶Json格式
      * @throws SQLException 查询SQL错误
      */
-    public static JSONObject getDriftBottleAll() throws SQLException {
+    public static JSONObject getDriftBottleAll(long operationID, MessageEvent event) throws SQLException {
         JSONObject result = new JSONObject();
         String sql = "SELECT TOP 1 * FROM DriftBottle " +
                 "WHERE groupID = ? AND restPick > 0" +
@@ -65,11 +70,14 @@ public class DriftBottle extends BaseDatabaseUtil {
         statement.setString(1, "0");
         ResultSet resultSet = statement.executeQuery();
         resultSet.first();
+        result.put("bottleID", resultSet.getLong("operationID"));
         result.put("sendTime", resultSet.getTimestamp("sendTime").getTime());
         result.put("message", resultSet.getString("bottleContent"));
         synchronized (lock) {
             setBottleShort(resultSet.getLong("operationID"), "restPick", (short) (resultSet.getShort("restPick") - 1));
         }
+
+        addPickRecord(operationID, resultSet.getLong("operationID"));
         statement.close();
         return result;
     }
@@ -90,6 +98,17 @@ public class DriftBottle extends BaseDatabaseUtil {
         return num;
     }
 
+    public static short getBottleShort(long id, String key) throws SQLException {
+        String sql = "SELECT " + key + " FROM DriftBottle WHERE operationID = ?";
+        PreparedStatement statement = getStatement(sql);
+        statement.setLong(1, id);
+        ResultSet resultSet = statement.executeQuery();
+        resultSet.next();
+        short returnValue = resultSet.getShort(1);
+        statement.close();
+        return returnValue;
+    }
+
     /**
      * 设置一个漂流瓶的short-SmallInt数值
      *
@@ -104,6 +123,28 @@ public class DriftBottle extends BaseDatabaseUtil {
         PreparedStatement statement = getStatement(sql);
 //        statement.setString(1, key);
         statement.setShort(1, num);
+        statement.setLong(2, id);
+        statement.executeUpdate();
+        statement.close();
+    }
+
+    public static int getBottleInt(long id, String key) throws SQLException {
+        String sql = "SELECT " + key + " FROM DriftBottle WHERE operationID = ?";
+        PreparedStatement statement = getStatement(sql);
+        statement.setLong(1, id);
+        ResultSet resultSet = statement.executeQuery();
+        resultSet.next();
+        int returnValue = resultSet.getInt(1);
+        statement.close();
+        return returnValue;
+    }
+
+    public static void setBottleInt(long id, String key, int num) throws SQLException {
+        String sql = "UPDATE DriftBottle SET " + key + " = ? " +
+                "WHERE operationID = ?";
+        PreparedStatement statement = getStatement(sql);
+//        statement.setString(1, key);
+        statement.setInt(1, num);
         statement.setLong(2, id);
         statement.executeUpdate();
         statement.close();
@@ -143,53 +184,22 @@ public class DriftBottle extends BaseDatabaseUtil {
         return num != 0;
     }
 
-    /**
-     * 发送群内漂流瓶
-     *
-     * @param newBottle   漂流瓶Json格式
-     * @param operationID 操作代码，用于写入数据库
-     * @throws SQLException 查询SQL错误
-     */
-    public void addDriftBottle(JSONObject newBottle, long operationID) throws SQLException {
-        if (hasSameBottle(newBottle.getString("message")))
-            return;
-        if (newBottle.getString("message").isEmpty())
-            return;
-        String sql = "INSERT INTO DriftBottle " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
-        PreparedStatement statement = getStatement(sql);
-        statement.setLong(1, operationID);
-        statement.setLong(2, newBottle.getLong("senderID"));
-        statement.setString(3, newBottle.getString("message").trim());
-        statement.setLong(4, groupID);
-        statement.setShort(5, (short) 2);
-        statement.setTimestamp(6, new Timestamp(new Date().getTime()));
-        statement.executeUpdate();
-        statement.close();
+    public static void addPickRecord(long operationID, long pickBottleID) throws SQLException {
+        OperationDatabaseUtil.operationAddTarget(operationID, pickBottleID);
     }
 
-    /**
-     * 接收全局漂流瓶
-     *
-     * @return 漂流瓶Json格式
-     * @throws SQLException 查询SQL错误
-     */
-    public JSONObject getDriftBottle() throws SQLException {
-        JSONObject result = new JSONObject();
-        String sql = "SELECT TOP 1 * FROM DriftBottle " +
-                "WHERE groupID = ? AND restPick > 0" +
-                "ORDER BY newid()";
+    private static long getLastPickBottle(long userID) throws SQLException {
+        String sql = "SELECT TOP 1 target FROM Operation " +
+                "WHERE userID = ? " +
+                "AND ( OperationCode = 20 OR OperationCode = 21)" +
+                "ORDER BY id DESC";
         PreparedStatement statement = getStatement(sql);
-        statement.setLong(1, groupID);
+        statement.setLong(1, userID);
         ResultSet resultSet = statement.executeQuery();
-        resultSet.first();
-        result.put("sendTime", resultSet.getTimestamp("sendTime").getTime());
-        result.put("message", resultSet.getString("bottleContent"));
-        synchronized (selfLock) {
-            setBottleShort(resultSet.getLong("operationID"), "restPick", (short) (resultSet.getShort("restPick") - 1));
-        }
+        resultSet.next();
+        long returnValue = resultSet.getLong(1);
         statement.close();
-        return result;
+        return returnValue;
     }
 
     /**
@@ -259,5 +269,125 @@ public class DriftBottle extends BaseDatabaseUtil {
         int num = resultSet.getRow();
         statement.close();
         return num != 0;
+    }
+
+    public static boolean likeDriftBottle(long operationID, long userID) throws SQLException {
+        // 检查是否已经点赞过了
+        long bottleID = getLastPickBottle(userID);
+        String sql = "SELECT COUNT(*) FROM Operation WHERE OperationCode = 24 " +
+                "AND target = ? AND userID = ?";
+        PreparedStatement statement = getStatement(sql);
+        statement.setLong(1, bottleID);
+        statement.setLong(2, userID);
+        ResultSet resultSet = statement.executeQuery();
+        resultSet.next();
+        if (resultSet.getInt(1) > 0) {
+            statement.close();
+            return false;
+        }
+
+        sql = "UPDATE DriftBottle SET giveLike = ? WHERE operationID = ?";
+        statement = getStatement(sql);
+        statement.setLong(2, bottleID);
+        int like = getBottleInt(bottleID, "giveLike");
+        statement.setInt(1, like + 1);
+        statement.executeUpdate();
+        statement.close();
+
+        OperationDatabaseUtil.operationAddTarget(operationID, bottleID);
+        return true;
+    }
+
+    public static boolean likeDriftBottle(long operationID, long userID, long bottleID) throws SQLException {
+        if (!getBottleExist(bottleID))
+            return false;
+        String sql = "SELECT COUNT(*) FROM Operation WHERE OperationCode = 24 " +
+                "AND target = ? AND userID = ?";
+        PreparedStatement statement = getStatement(sql);
+        statement.setLong(1, bottleID);
+        statement.setLong(2, userID);
+        ResultSet resultSet = statement.executeQuery();
+        resultSet.next();
+        if (resultSet.getInt(1) > 0) {
+            statement.close();
+            return false;
+        }
+
+        sql = "UPDATE DriftBottle SET giveLike = ? WHERE operationID = ?";
+        statement = getStatement(sql);
+        statement.setLong(2, bottleID);
+        int like = getBottleInt(bottleID, "giveLike");
+        statement.setInt(1, like + 1);
+        statement.executeUpdate();
+        statement.close();
+
+        OperationDatabaseUtil.operationAddTarget(operationID, bottleID);
+        return true;
+    }
+
+    public static boolean getBottleExist(long bottleID) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM DriftBottle WHERE operationID = ?";
+        PreparedStatement statement = getStatement(sql);
+        statement.setLong(1, bottleID);
+        ResultSet resultSet = statement.executeQuery();
+        resultSet.next();
+        boolean returnValue = resultSet.getInt(1) > 0;
+        statement.close();
+        return returnValue;
+    }
+
+    /**
+     * 发送群内漂流瓶
+     *
+     * @param newBottle   漂流瓶Json格式
+     * @param operationID 操作代码，用于写入数据库
+     * @throws SQLException 查询SQL错误
+     */
+    public void addDriftBottle(JSONObject newBottle, long operationID) throws SQLException {
+        if (hasSameBottle(newBottle.getString("message")))
+            return;
+        if (newBottle.getString("message").isEmpty())
+            return;
+        String sql = "INSERT INTO DriftBottle (operationID, senderID, bottleContent, GroupID, restPick, sendTime, giveLike)" +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        PreparedStatement statement = getStatement(sql);
+        statement.setLong(1, operationID);
+        statement.setLong(2, newBottle.getLong("senderID"));
+        statement.setString(3, newBottle.getString("message").trim());
+        statement.setLong(4, groupID);
+        statement.setShort(5, (short) 2);
+        statement.setTimestamp(6, new Timestamp(new Date().getTime()));
+        statement.setInt(7, 0);
+        statement.executeUpdate();
+        statement.close();
+    }
+
+    /**
+     * 接收全局漂流瓶
+     *
+     * @param operationID 操作ID
+     * @param event       事件句柄
+     * @return 漂流瓶Json格式
+     * @throws SQLException 查询SQL错误
+     */
+    public JSONObject getDriftBottle(long operationID, MessageEvent event) throws SQLException {
+        JSONObject result = new JSONObject();
+        String sql = "SELECT TOP 1 * FROM DriftBottle " +
+                "WHERE groupID = ? AND restPick > 0" +
+                "ORDER BY newid()";
+        PreparedStatement statement = getStatement(sql);
+        statement.setLong(1, groupID);
+        ResultSet resultSet = statement.executeQuery();
+        resultSet.first();
+        result.put("bottleID", resultSet.getLong("operationID"));
+        result.put("sendTime", resultSet.getTimestamp("sendTime").getTime());
+        result.put("message", resultSet.getString("bottleContent"));
+        synchronized (selfLock) {
+            setBottleShort(resultSet.getLong("operationID"), "restPick", (short) (resultSet.getShort("restPick") - 1));
+        }
+
+        addPickRecord(operationID, resultSet.getLong("operationID"));
+        statement.close();
+        return result;
     }
 }

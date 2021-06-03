@@ -244,6 +244,7 @@ public class GroupHandler extends GroupMessageHandler {
                         }
                     }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     if (e.getClass().equals(SQLException.class)) {
                         group.sendMessage("数据库写入错误");
                     } else

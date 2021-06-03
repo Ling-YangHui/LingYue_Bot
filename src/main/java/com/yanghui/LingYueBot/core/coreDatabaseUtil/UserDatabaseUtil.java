@@ -163,7 +163,8 @@ public class UserDatabaseUtil extends BaseDatabaseUtil {
     }
 
     public static void insertUser(User user) throws SQLException {
-        String sql = "INSERT INTO Users VALUES (?,?,?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO Users (id, userName, schedule, favor, balance, gender, isSpecial, isAdministrator, isForbidden) " +
+                "VALUES (?,?,?,?,?,?,?,?,?)";
         PreparedStatement statement = getStatement(sql);
         statement.setLong(1, user.getId());
         statement.setString(2, user.getNick());

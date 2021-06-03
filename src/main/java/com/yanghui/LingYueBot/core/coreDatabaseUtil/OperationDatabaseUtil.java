@@ -21,7 +21,8 @@ public class OperationDatabaseUtil extends BaseDatabaseUtil {
      * @throws SQLException 查询SQL错误
      */
     public static long insertOperation(String operation, MessageEvent event, long groupID) throws SQLException {
-        String sql = "INSERT INTO Operation VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Operation (id, userID, operationCode, operationTime, groupID) " +
+                "VALUES (?, ?, ?, ?, ?)";
         PreparedStatement statement = getStatement(sql);
         long num = getOperationNum();
         statement.setLong(1, num + 1);
@@ -50,4 +51,19 @@ public class OperationDatabaseUtil extends BaseDatabaseUtil {
         return num;
     }
 
+    /**
+     * 插入一个操作的对象，对象的具体含义由操作方法来决定
+     *
+     * @param target      对象
+     * @param operationId 操作ID
+     * @throws SQLException 查询SQL错误
+     */
+    public static void operationAddTarget(long operationId, long target) throws SQLException {
+        String sql = "UPDATE Operation SET target = ? WHERE id = ?";
+        PreparedStatement statement = getStatement(sql);
+        statement.setLong(1, target);
+        statement.setLong(2, operationId);
+        statement.executeUpdate();
+        statement.close();
+    }
 }

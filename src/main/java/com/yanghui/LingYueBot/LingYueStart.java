@@ -67,7 +67,7 @@ public class LingYueStart extends JavaPlugin {
         groupHandlerHashMap.put(1121098457L, new BeiShiCheDui());
         groupHandlerHashMap.put(904280379L, new BingShuJu());
         groupHandlerHashMap.put(541674751L, new DaShiTang());
-        groupHandlerHashMap.put(573145769L, new GroupHandler(573145769L));
+//        groupHandlerHashMap.put(573145769L, new GroupHandler(573145769L));
         groupHandlerHashMap.put(583880103L, new GroupHandler(583880103L));
         for (GroupMessageHandler handler : groupHandlerHashMap.values()) {
             try {

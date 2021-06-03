@@ -184,10 +184,11 @@ public class OperationInterpreter {
                         JSONObject driftBottle = null;
                         try {
                             if (instructionList[2].equals("Local"))
-                                driftBottle = ((DriftBottle) functionMap.get("DriftBottle")).getDriftBottle();
+                                driftBottle = ((DriftBottle) functionMap.get("DriftBottle")).getDriftBottle(operationID, event);
                             else if (instructionList[2].equals("Global"))
-                                driftBottle = DriftBottle.getDriftBottleAll();
+                                driftBottle = DriftBottle.getDriftBottleAll(operationID, event);
                         } catch (SQLException e) {
+                            e.printStackTrace();
                             contact.sendMessage("这片海里，什么都没有呢");
                             break;
                         }
@@ -207,7 +208,7 @@ public class OperationInterpreter {
                             e.printStackTrace();
                             break;
                         }
-                        response.add(new PlainText("你收到了一条" + (day > 0 ? (day + "天") : "") + hour + "小时" + minute + "分钟前的漂流瓶\n"));
+                        response.add(new PlainText("你收到了一条" + (day > 0 ? (day + "天") : "") + hour + "小时" + minute + "分钟前的漂流瓶, 代号#" + driftBottle.getLong("bottleID") + "\n"));
                         response.add(new At(event.getSender().getId()));
                         response.add(new PlainText(" " + driftBottle.getString("message")));
                         contact.sendMessage(response.asMessageChain());
@@ -240,6 +241,25 @@ public class OperationInterpreter {
                             }
                         }
                         break;
+                    case "-Like":
+                        try {
+                            String messageContent = event.getMessage().contentToString().replace("@3598326822 好瓶子", "").replace(" ", "");
+                            if (messageContent.isEmpty()) {
+                                if (DriftBottle.likeDriftBottle(operationID, event.getSender().getId()))
+                                    contact.sendMessage("点赞成功！");
+                                else
+                                    contact.sendMessage("你已经点赞过了");
+                            } else {
+                                long bottleID = Long.parseLong(messageContent.trim());
+                                if (DriftBottle.likeDriftBottle(operationID, event.getSender().getId(), bottleID))
+                                    contact.sendMessage("点赞成功！");
+                                else
+                                    contact.sendMessage("你已经点赞过或者该瓶子id不存在");
+                            }
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                            contact.sendMessage("数据库错误，执行失败");
+                        }
                 }
                 break;
             /* TODO: 化学式配平 */

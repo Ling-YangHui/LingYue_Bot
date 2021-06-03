@@ -11,12 +11,13 @@ import java.util.Vector;
 
 public class ArknightsRandCard extends BaseDatabaseUtil {
 
-    private static final String[] sixArray = {"棘刺", "铃兰", "早露", "温蒂", "傀影", "风笛", "刻俄柏", "阿", "煌", "莫斯提马", "麦哲伦", "赫拉格", "黑", "陈", "斯卡蒂", "银灰", "塞雷娅", "星熊", "夜莺", "闪灵", "安洁莉娜", "艾雅法拉", "伊芙利特", "推进之王", "能天使", "森蚺", "史尔特尔", "瑕光", "泥岩", "山", "空弦", "凯尔希", "刻俄柏", "异客"};
-    private static final String[] fiveArray = {"安哲拉", "贾维", "蜜蜡", "断崖", "莱恩哈特", "月禾", "石棉", "极境", "巫恋", "慑砂", "惊蛰", "吽", "灰喉", "布洛卡", "苇草", "槐琥", "送葬人", "星极", "格劳克斯", "诗怀雅", "夜魔", "食铁兽", "狮蝎", "空", "真理", "初雪", "崖心", "守林人", "普罗旺斯", "可颂", "雷蛇", "红", "临光", "华法琳", "赫默", "梅尔", "天火", "陨星", "白金", "蓝毒", "幽灵鲨", "拉普兰德", "芙兰卡", "德克萨斯", "凛冬", "白面鸮", "燧石", "四月", "奥斯塔", "絮雨", "卡夫卡", "爱丽丝"};
-    private static final String[] fourArray = {"孑", "卡达", "波登可", "刻刀", "宴", "安比尔", "梅", "红云", "桃金娘", "苏苏洛", "格雷伊", "猎蜂", "阿消", "地灵", "深海色", "古米", "蛇屠箱", "角峰", "调香师", "嘉维尔", "末药", "暗索", "砾", "慕斯", "霜叶", "缠丸", "杜宾", "红豆", "清道夫", "讯使", "白雪", "流星", "杰西卡", "远山", "夜烟", "酸糖", "芳汀", "泡泡", "杰克", "松果", "豆苗"};
+    private static final String[] sixArray = {"棘刺", "铃兰", "早露", "温蒂", "傀影", "风笛", "刻俄柏", "阿", "煌", "莫斯提马", "麦哲伦", "赫拉格", "黑", "陈", "斯卡蒂", "银灰", "塞雷娅", "星熊", "夜莺", "闪灵", "安洁莉娜", "艾雅法拉", "伊芙利特", "推进之王", "能天使", "森蚺", "史尔特尔", "瑕光", "泥岩", "山", "空弦", "凯尔希", "刻俄柏", "异客", "卡涅利安"};
+    private static final String[] fiveArray = {"安哲拉", "贾维", "蜜蜡", "断崖", "莱恩哈特", "月禾", "石棉", "极境", "巫恋", "慑砂", "惊蛰", "吽", "灰喉", "布洛卡", "苇草", "槐琥", "送葬人", "星极", "格劳克斯", "诗怀雅", "夜魔", "食铁兽", "狮蝎", "空", "真理", "初雪", "崖心", "守林人", "普罗旺斯", "可颂", "雷蛇", "红", "临光", "华法琳", "赫默", "梅尔", "天火", "陨星", "白金", "蓝毒", "幽灵鲨", "拉普兰德", "芙兰卡", "德克萨斯", "凛冬", "白面鸮", "燧石", "四月", "奥斯塔", "絮雨", "卡夫卡", "爱丽丝", "绮良"};
+    private static final String[] fourArray = {"孑", "卡达", "波登可", "刻刀", "宴", "安比尔", "梅", "红云", "桃金娘", "苏苏洛", "格雷伊", "猎蜂", "阿消", "地灵", "深海色", "古米", "蛇屠箱", "角峰", "调香师", "嘉维尔", "末药", "暗索", "砾", "慕斯", "霜叶", "缠丸", "杜宾", "红豆", "清道夫", "讯使", "白雪", "流星", "杰西卡", "远山", "夜烟", "酸糖", "芳汀", "泡泡", "杰克", "松果", "豆苗", "深靛"};
     private static final String[] threeArray = {"斑点", "泡普卡", "月见夜", "空爆", "梓兰", "史都华德", "安塞尔", "芙蓉", "炎熔", "安德切尔", "克洛斯", "米格鲁", "卡缇", "梅兰莎", "翎羽", "香草", "芬"};
-    private static final String[] upSixArray = {"棘刺", "铃兰", "温蒂", "夜莺"};
-    private static final String[] upFiveArray = {};
+    private static final String[] upSixArray = {"卡涅利安"};
+    private static final String[] upFiveArray = {"绮良", "崖心"};
+    private static final String[] upFourArray = {"深靛"};
     private static final String[] priorityArray = {};
 
     private static final Vector<String> six = new Vector<>();
@@ -25,10 +26,12 @@ public class ArknightsRandCard extends BaseDatabaseUtil {
     private static final Vector<String> three = new Vector<>();
     private static final Vector<String> upSix = new Vector<>();
     private static final Vector<String> upFive = new Vector<>();
+    private static final Vector<String> upFour = new Vector<>();
     private static final Vector<String> priority = new Vector<>();
 
-    private static final int upSixPossibility = 10;
+    private static final int upSixPossibility = 5;
     private static final int upFivePossibility = 5;
+    private static final int upFourPossibility = 2;
 
     static {
         six.addAll(Arrays.asList(sixArray));
@@ -37,9 +40,12 @@ public class ArknightsRandCard extends BaseDatabaseUtil {
         three.addAll(Arrays.asList(threeArray));
         upSix.addAll(Arrays.asList(upSixArray));
         upFive.addAll(Arrays.asList(upFiveArray));
+        upFour.addAll(Arrays.asList(upFourArray));
         priority.addAll(Arrays.asList(priorityArray));
         six.removeAll(upSix);
         six.removeAll(priority);
+        five.removeAll(upFive);
+        four.removeAll(upFour);
     }
 
     /**
@@ -139,7 +145,13 @@ public class ArknightsRandCard extends BaseDatabaseUtil {
             }
 
         } else if (randCache < possibility[2] * 100) {
-            return four.get(new Random().nextInt(four.size()));
+            randCache = new Random().nextInt(10);
+            if (upFour.isEmpty())
+                return four.get(new Random().nextInt(four.size()));
+            if (randCache < upFourPossibility)
+                return upFour.get(new Random().nextInt(upFour.size()));
+            else
+                return four.get(new Random().nextInt(four.size()));
         } else {
             return three.get(new Random().nextInt(three.size()));
         }
@@ -166,7 +178,7 @@ public class ArknightsRandCard extends BaseDatabaseUtil {
             return 6;
         if (upFive.contains(name) || five.contains(name))
             return 5;
-        if (four.contains(name))
+        if (four.contains(name) || upFour.contains(name))
             return 4;
         return 3;
     }
@@ -180,7 +192,8 @@ public class ArknightsRandCard extends BaseDatabaseUtil {
      * @throws SQLException 查询SQL错误
      */
     public static void addRandRecord(long operationID, MessageEvent event, Vector<Vector<String>> result) throws SQLException {
-        String sql = "INSERT INTO RandCard VALUES (?,?,?,?,?)";
+        String sql = "INSERT INTO RandCard (operationID, userID, randNum, sixNum, fiveNum)" +
+                "VALUES (?,?,?,?,?)";
         PreparedStatement statement = getStatement(sql);
         statement.setLong(1, operationID);
         statement.setLong(2, event.getSender().getId());

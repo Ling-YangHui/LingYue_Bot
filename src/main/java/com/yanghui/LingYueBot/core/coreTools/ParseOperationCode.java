@@ -14,18 +14,23 @@ public class ParseOperationCode {
                 }
                 break;
             case "DriftBottle":
-                if (instructionList[1].equals("-GET")) {
-                    if (instructionList[2].equals("Local"))
-                        return 20;
-                    else if (instructionList[2].equals("Global"))
-                        return 21;
+                switch (instructionList[1]) {
+                    case "-GET":
+                        if (instructionList[2].equals("Local"))
+                            return 20;
+                        else if (instructionList[2].equals("Global"))
+                            return 21;
 
-                } else if (instructionList[1].equals("-ADD")) {
-                    if (instructionList[2].equals("Local")) {
-                        return 22;
-                    } else if (instructionList[2].equals("Global")) {
-                        return 23;
-                    }
+                        break;
+                    case "-ADD":
+                        if (instructionList[2].equals("Local")) {
+                            return 22;
+                        } else if (instructionList[2].equals("Global")) {
+                            return 23;
+                        }
+                        break;
+                    case "-Like":
+                        return 24;
                 }
                 break;
             case "Balance":
