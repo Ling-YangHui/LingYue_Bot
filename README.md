@@ -1,4 +1,4 @@
-# LingYue_Bot
+<h1 style="text-align: center; color: deepskyblue">LingYue_Bot</h1>
 
 ## 简介
 

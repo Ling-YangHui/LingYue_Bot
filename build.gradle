@@ -1,7 +1,7 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.4.21'
     id 'java'
-    id 'net.mamoe.mirai-console' version '2.0.0'
+    id 'net.mamoe.mirai-console' version '2.6.1'
 }
 
 group = 'LingDong'
@@ -16,13 +16,14 @@ def miraiConsoleVersion = "2.6.1" // 2.0.0
 
 dependencies {
     compileOnly 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    compileOnly "net.mamoe:mirai-core:$miraiCoreVersion"
-    compileOnly "net.mamoe:mirai-console:$miraiConsoleVersion"
-    compileOnly "net.mamoe:mirai-console-terminal:$miraiConsoleVersion"
+//    compileOnly "net.mamoe:mirai-core:$miraiCoreVersion"
+//    compileOnly "net.mamoe:mirai-console:$miraiConsoleVersion"
+//    compileOnly "net.mamoe:mirai-console-terminal:$miraiConsoleVersion"
+    compileOnly "net.mamoe:mirai-core-api:$miraiCoreVersion"
     compile fileTree(dir:'lib', include: ['*jar'])
 
-    testImplementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+//    testImplementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     testImplementation "net.mamoe:mirai-core:$miraiCoreVersion"
-    testImplementation "net.mamoe:mirai-console:$miraiConsoleVersion"
-    testImplementation "net.mamoe:mirai-console-terminal:$miraiConsoleVersion"
+//    testImplementation "net.mamoe:mirai-console:$miraiConsoleVersion"
+//    testImplementation "net.mamoe:mirai-console-terminal:$miraiConsoleVersion"
 }

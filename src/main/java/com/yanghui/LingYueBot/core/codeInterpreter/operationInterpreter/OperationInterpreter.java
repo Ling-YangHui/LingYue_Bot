@@ -1,4 +1,4 @@
-package com.yanghui.LingYueBot.core.codeInterpreter.operationInterperter;
+package com.yanghui.LingYueBot.core.codeInterpreter.operationInterpreter;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 
 public class OperationInterpreter {
 
-    public static void execute(JSONObject replyObject, int num, MessageEvent event, Contact contact, HashMap<String, Object> FunctionMap, long groupID) {
+    public static void execute(JSONObject replyObject, int num, MessageEvent event, Contact contact, HashMap<String, Object> FunctionMap) {
         JSONArray reply = replyObject.getJSONArray("reply");
         JSONArray operation = replyObject.getJSONArray("operation");
         String conditionStr = replyObject.getJSONArray("condition").getString(num);
@@ -30,11 +30,11 @@ public class OperationInterpreter {
         }
         if (!conditionList.get(2).isEmpty()) {
             if (conditionList.get(2).equals("RAND")) {
-                executeReply(replyObject, reply.getString(new Random().nextInt(reply.size())), event, contact, FunctionMap, groupID);
+                executeReply(replyObject, reply.getString(new Random().nextInt(reply.size())), event, contact, FunctionMap);
             } else {
                 String[] replyStrList = conditionList.get(2).split(",");
                 for (String s : replyStrList) {
-                    executeReply(replyObject, reply.getString(Integer.parseInt(s.trim())), event, contact, FunctionMap, groupID);
+                    executeReply(replyObject, reply.getString(Integer.parseInt(s.trim())), event, contact, FunctionMap);
                 }
             }
         }
@@ -42,16 +42,16 @@ public class OperationInterpreter {
             String[] operationStrList = conditionList.get(3).split(",");
             for (String s : operationStrList) {
                 s = s.trim();
-                executeOperation(operation.getString(Integer.parseInt(s)), event, contact, FunctionMap, groupID);
+                executeOperation(operation.getString(Integer.parseInt(s)), event, contact, FunctionMap, contact.getId());
             }
         }
     }
 
-    public static void execute(JSONObject replyObject, int num, MessageEvent event, HashMap<String, Object> functionMap, long groupID) {
-        execute(replyObject, num, event, event.getSender(), functionMap, groupID);
+    public static void execute(JSONObject replyObject, int num, MessageEvent event, HashMap<String, Object> functionMap) {
+        execute(replyObject, num, event, event.getSender(), functionMap);
     }
 
-    public static void executeReply(JSONObject replyObject, String replyStr, MessageEvent event, Contact contact, HashMap<String, Object> FunctionMap, long groupID) {
+    public static void executeReply(JSONObject replyObject, String replyStr, MessageEvent event, Contact contact, HashMap<String, Object> FunctionMap) {
         String regex = "(\\[[^\\]]*\\])";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(replyStr);
@@ -60,17 +60,23 @@ public class OperationInterpreter {
         while (matcher.find()) {
             replyFunc.add(matcher.group().substring(1, matcher.group().length() - 1));
         }
-        executeReply(replyFunc.get(0), contact, groupID);
+        executeReply(replyFunc.get(0), contact);
         String[] operationList = replyFunc.get(1).split(",");
         for (String str : operationList) {
             try {
-                executeOperation(operation.getString(Integer.parseInt(str.trim())), event, contact, FunctionMap, groupID);
+                executeOperation(operation.getString(Integer.parseInt(str.trim())), event, contact, FunctionMap, contact.getId());
             } catch (NumberFormatException ignore) {
             }
         }
     }
 
-    public static void executeReply(String replyStr, Contact contact, long groupID) {
+    /**
+     * 可对外使用的Reply API
+     *
+     * @param replyStr 回复字符串
+     * @param contact  回复对象
+     */
+    public static void executeReply(String replyStr, Contact contact) {
         String[] replyList = replyStr.split("&&");
         for (String str : replyList) {
             String[] reply = str.split("&");
@@ -91,8 +97,8 @@ public class OperationInterpreter {
                 if (replyItem.startsWith("IMG:")) {
                     System.out.println(replyItem.substring(4));
                     try {
-                        String type = ResourceDatabaseUtil.getResource(Integer.parseInt(replyItem.substring(4).trim()), groupID);
-                        SendPictures.sendPictures(type, contact, groupID);
+                        String type = ResourceDatabaseUtil.getResource(Integer.parseInt(replyItem.substring(4).trim()), contact.getId());
+                        SendPictures.sendPictures(type, contact, contact.getId());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

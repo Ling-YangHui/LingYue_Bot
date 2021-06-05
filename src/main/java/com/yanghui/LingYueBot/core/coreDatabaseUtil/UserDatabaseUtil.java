@@ -113,6 +113,14 @@ public class UserDatabaseUtil extends BaseDatabaseUtil {
         return result;
     }
 
+    /**
+     * 设置用户字符串属性
+     *
+     * @param id    用户QQ号
+     * @param key   属性列名
+     * @param value 需要设置的值
+     * @throws SQLException 查询SQL失败
+     */
     public static void setUserString(long id, String key, String value) throws SQLException {
         String sql = "UPDATE Users SET " + key + " = ? WHERE id = ?";
         PreparedStatement statement = getStatement(sql);
@@ -122,6 +130,14 @@ public class UserDatabaseUtil extends BaseDatabaseUtil {
         statement.close();
     }
 
+    /**
+     * 获取用户short类型属性
+     *
+     * @param id  用户QQ号
+     * @param key 属性列名
+     * @return 用户short类型属性
+     * @throws SQLException 查询SQL失败
+     */
     public static short getUserShort(long id, String key) throws SQLException {
         String sql = "SELECT " + key + " FROM Users WHERE id = ?";
         PreparedStatement statement = getStatement(sql);

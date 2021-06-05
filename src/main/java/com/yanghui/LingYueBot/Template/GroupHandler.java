@@ -3,7 +3,7 @@ package com.yanghui.LingYueBot.Template;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.yanghui.LingYueBot.core.codeInterpreter.conditionInterpreter.ConditionInterpreter;
-import com.yanghui.LingYueBot.core.codeInterpreter.operationInterperter.OperationInterpreter;
+import com.yanghui.LingYueBot.core.codeInterpreter.operationInterpreter.OperationInterpreter;
 import com.yanghui.LingYueBot.core.coreDatabaseUtil.*;
 import com.yanghui.LingYueBot.core.messageHandler.GroupMessageHandler;
 import com.yanghui.LingYueBot.functions.DailyReport;
@@ -72,7 +72,7 @@ public class GroupHandler extends GroupMessageHandler {
                     for (int i = 0; i < scheduleArray.size(); i++) {
                         if (nowTime.equals(scheduleArray.getJSONObject(i).getString("time"))) {
                             if (group != null) {
-                                OperationInterpreter.executeReply(scheduleArray.getJSONObject(i).getString("message"), group, groupID);
+                                OperationInterpreter.executeReply(scheduleArray.getJSONObject(i).getString("message"), group);
                             }
                         }
                     }
@@ -361,7 +361,7 @@ public class GroupHandler extends GroupMessageHandler {
                 }
                 if (!conditionSatisfied)
                     continue;
-                OperationInterpreter.execute(replyObject, satisfiedNum, event, group, functionMap, groupID);
+                OperationInterpreter.execute(replyObject, satisfiedNum, event, group, functionMap);
             }
         }
     }
