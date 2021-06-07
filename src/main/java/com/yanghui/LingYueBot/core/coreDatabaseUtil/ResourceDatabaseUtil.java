@@ -1,8 +1,12 @@
 package com.yanghui.LingYueBot.core.coreDatabaseUtil;
 
+import net.mamoe.mirai.message.data.Image;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -52,14 +56,26 @@ public class ResourceDatabaseUtil extends BaseDatabaseUtil {
      * @param type   数据文件类型
      * @throws SQLException 查询SQL失败
      */
-    public static void inputResource(InputStream stream, short type) throws SQLException {
+    public static int inputResource(InputStream stream, short type) throws SQLException {
         String sql = "INSERT INTO Resource (id, type, resource) VALUES(?, ?, ?)";
         PreparedStatement statement = getStatement(sql);
-        statement.setInt(1, getResourceNum() + 1);
+        int id = getResourceNum() + 1;
+        statement.setInt(1, id);
         statement.setShort(2, type);
         statement.setBinaryStream(3, stream);
         statement.executeUpdate();
         statement.close();
+        return id;
+    }
+
+    public static int inputResource(Image image, short type) throws SQLException, IOException {
+        URL url = new URL(Image.queryUrl(image));
+        URLConnection con = url.openConnection();
+        con.setConnectTimeout(5000);
+        InputStream inputStream = con.getInputStream();
+        int id = ResourceDatabaseUtil.inputResource(inputStream, type);
+        inputStream.close();
+        return id;
     }
 
     /**

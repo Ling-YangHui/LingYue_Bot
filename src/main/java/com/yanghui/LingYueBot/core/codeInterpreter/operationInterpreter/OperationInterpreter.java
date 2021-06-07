@@ -268,8 +268,8 @@ public class OperationInterpreter {
                         }
                 }
                 break;
-            /* TODO: 化学式配平 */
 
+            /* TODO: 化学式配平 */
             case "Balance": {
                 String messageContent = event.getMessage().contentToString();
                 messageContent = messageContent.replace("@3598326822 配平 ", "");
@@ -283,8 +283,8 @@ public class OperationInterpreter {
                 }
                 break;
             }
-            /* TODO: 抽卡 */
 
+            /* TODO: 抽卡 */
             case "RandCard": {
                 String messageContent = event.getMessage().contentToString();
                 messageContent = messageContent.replace("@3598326822 抽卡 ", "");
@@ -339,14 +339,28 @@ public class OperationInterpreter {
                 contact.sendMessage(response.asMessageChain());
                 break;
 
-            /* TODO: 萌萌的图片 */
+            /* TODO: 高雅艺术 */
             case "MoePic":
-                try {
-                    SendPictures.sendPicturesFromInternet(contact);
-                } catch (Exception e) {
-                    contact.sendMessage("图片下载错误");
+                switch (instructionList[1]) {
+                    case "-GET":
+                        try {
+                            SendPictures.sendPicturesFromInternet(contact);
+                        } catch (Exception e) {
+                            contact.sendMessage("图片下载错误");
+                        }
+                        break;
+                    case "-GET-MORE":
+                        for (int i = 0; i < 3; i++) {
+                            try {
+                                SendPictures.sendPicturesFromInternet(contact);
+                            } catch (Exception e) {
+                                contact.sendMessage("图片下载错误");
+                            }
+                        }
+                        break;
                 }
                 break;
+
 
             /* TODO: 获取种子 */
             case "RandSeed":

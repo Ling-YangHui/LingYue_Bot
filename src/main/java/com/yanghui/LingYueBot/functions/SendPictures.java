@@ -1,5 +1,6 @@
 package com.yanghui.LingYueBot.functions;
 
+import com.yanghui.LingYueBot.core.coreDatabaseUtil.ResourceDatabaseUtil;
 import net.mamoe.mirai.contact.Contact;
 
 import java.io.File;
@@ -7,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.sql.SQLException;
 import java.util.Random;
 
 public class SendPictures {
@@ -40,14 +42,27 @@ public class SendPictures {
      * @param contact 发送的对象
      * @throws IOException 启动URL失败
      */
-    public static void sendPicturesFromInternet(Contact contact) throws IOException {
+    public static void sendPicturesFromInternet(Contact contact) throws Exception {
         String[] url = {
                 "https://api.dongmanxingkong.com/suijitupian/acg/1080p/index.php",
                 "https://api.vvhan.com/api/acgimg",
                 "https://www.dmoe.cc/random.php",
-                "https://api.ghser.com/random/api.php",
+//                "https://api.ghser.com/random/api.php",
                 "https://api.ixiaowai.cn/api/api.php"};
-        InputStream inputStream = getImageFromURL(url[new Random().nextInt(url.length)]);
+        InputStream inputStream = null;
+        int count = 5;
+        while (true) {
+            try {
+                count--;
+                inputStream = getImageFromURL(url[new Random().nextInt(url.length)]);
+                break;
+            } catch (IOException e) {
+                if (count <= 0)
+                    break;
+            }
+        }
+        if (inputStream == null)
+            throw new IOException();
         Contact.Companion.sendImage(contact, inputStream, "jpg");
         inputStream.close();
     }
@@ -64,5 +79,9 @@ public class SendPictures {
         URLConnection connection = site.openConnection();
         connection.setConnectTimeout(5000);
         return connection.getInputStream();
+    }
+
+    public static void storeUpImage(InputStream inputStream) throws SQLException {
+        ResourceDatabaseUtil.inputResource(inputStream, (short) 2);
     }
 }

@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.yanghui.LingYueBot.core.codeInterpreter.conditionInterpreter.ConditionInterpreter;
 import com.yanghui.LingYueBot.core.codeInterpreter.operationInterpreter.OperationInterpreter;
 import com.yanghui.LingYueBot.core.coreDatabaseUtil.*;
+import com.yanghui.LingYueBot.core.coreTools.ExtractSingleMessage;
 import com.yanghui.LingYueBot.core.messageHandler.GroupMessageHandler;
 import com.yanghui.LingYueBot.functions.DailyReport;
 import com.yanghui.LingYueBot.functions.DriftBottle;
@@ -16,9 +17,6 @@ import net.mamoe.mirai.message.data.Image;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -229,20 +227,9 @@ public class GroupHandler extends GroupMessageHandler {
             if (messageContent.contains("LingYue -inputResource")) {
                 try {
                     short type = Short.parseShort(messageContent.split("@")[1]);
-                    for (int i = 0; i < message.size(); i++) {
-                        System.out.println(message.get(i).getClass());
-                        System.out.println(Image.class.isAssignableFrom(message.get(i).getClass()));
-                        if (Image.class.isAssignableFrom(message.get(i).getClass())) {
-                            URL url = new URL(Image.queryUrl((Image) message.get(i)));
-                            URLConnection con = url.openConnection();
-                            con.setConnectTimeout(5000);
-                            InputStream inputStream = con.getInputStream();
-                            ResourceDatabaseUtil.inputResource(inputStream, type);
-                            inputStream.close();
-                            group.sendMessage("写入成功");
-                            break;
-                        }
-                    }
+                    Image image = ExtractSingleMessage.extractImage(event.getMessage()).get(0);
+                    ResourceDatabaseUtil.inputResource(image, type);
+                    group.sendMessage("写入成功");
                 } catch (Exception e) {
                     e.printStackTrace();
                     if (e.getClass().equals(SQLException.class)) {

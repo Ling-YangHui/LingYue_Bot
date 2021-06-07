@@ -54,7 +54,6 @@ public class LingYueStart extends JavaPlugin {
                 }
             }
         });
-
         Listener<?> newFriendsEventListener = GlobalEventChannel.INSTANCE.subscribeAlways(NewFriendRequestEvent.class, NewFriendRequestEvent::accept);
     }
 
