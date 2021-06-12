@@ -1,4 +1,6 @@
-package com.yanghui.lingYueBot.tools;
+package com.yanghui.lingYueBot.SDK;
+
+import com.yanghui.lingYueBot.utils.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,7 +24,7 @@ public class Install {
             System.out.println("Size: " + new File("D:\\IntelliJ IDEA programming\\MiraiRobot\\MiraiCore\\plugins\\LingYue.mirai.jar").length() / 1024 + "KB");
             System.out.println("Time: " + new Date());
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.logError(e);
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.yanghui.lingYueBot.core.coreTools;
+package com.yanghui.lingYueBot.core.coreUtils;
 
 import net.mamoe.mirai.message.data.Image;
 import net.mamoe.mirai.message.data.MessageChain;

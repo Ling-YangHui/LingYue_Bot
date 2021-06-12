@@ -1,4 +1,4 @@
-package com.yanghui.lingYueBot.functions;
+package com.yanghui.lingYueBot.functions.connectPython;
 
 import com.yanghui.lingYueBot.core.coreDatabaseUtil.BaseDatabaseUtil;
 

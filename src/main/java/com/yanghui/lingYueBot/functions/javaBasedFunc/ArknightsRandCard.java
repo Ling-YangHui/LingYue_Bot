@@ -1,4 +1,4 @@
-package com.yanghui.lingYueBot.functions;
+package com.yanghui.lingYueBot.functions.javaBasedFunc;
 
 import com.yanghui.lingYueBot.core.coreDatabaseUtil.BaseDatabaseUtil;
 import net.mamoe.mirai.event.events.MessageEvent;

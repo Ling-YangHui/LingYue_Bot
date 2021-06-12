@@ -3,11 +3,9 @@ package com.yanghui.lingYueBot;
 import com.yanghui.lingYueBot.core.coreDatabaseUtil.BaseDatabaseUtil;
 import com.yanghui.lingYueBot.core.messageHandler.GroupMessageHandler;
 import com.yanghui.lingYueBot.core.messageHandler.UserMessageHandler;
-import com.yanghui.lingYueBot.groupHandler.BeiShiCheDui;
-import com.yanghui.lingYueBot.groupHandler.BingShuJu;
-import com.yanghui.lingYueBot.groupHandler.DaShiTang;
 import com.yanghui.lingYueBot.groupHandler.XiaoFangZhou;
-import com.yanghui.lingYueBot.template.GroupHandler;
+import com.yanghui.lingYueBot.handler.GroupHandler;
+import com.yanghui.lingYueBot.utils.Logger;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.console.extension.PluginComponentStorage;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
@@ -26,6 +24,23 @@ public class LingYueStart extends JavaPlugin {
 
     public static final HashMap<Long, GroupMessageHandler> groupHandlerHashMap = new HashMap<>();
     public static final HashMap<Long, UserMessageHandler> userHandlerHashMap = new HashMap<>();
+
+    // WARNING: INSTANCE字段必须设置为public, 否则mirai-console在反射时会失败.
+    public static final LingYueStart INSTANCE = new LingYueStart();
+    private static final boolean pluginLoaded = false;
+    private static final Bot CURRENT_BOT = null;
+
+    public static LingYueStart getInstance() {
+        return INSTANCE;
+    }
+
+    public static Bot getCurrentBot() {
+        return CURRENT_BOT;
+    }
+
+    public static boolean isPluginLoaded() {
+        return pluginLoaded;
+    }
 
     public LingYueStart() {
         super(new JvmPluginDescriptionBuilder(
@@ -50,7 +65,7 @@ public class LingYueStart extends JavaPlugin {
                     groupHandlerHashMap.get(groupMessageEvent.getGroup().getId()).onHandleMessage(groupMessageEvent);
                     Thread.sleep(100);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Logger.logError(e);
                 }
             }
         });
@@ -63,16 +78,15 @@ public class LingYueStart extends JavaPlugin {
         /* TODO: 这里写不同消息对象的初始化事件 */
         // 初始化事件handler
         groupHandlerHashMap.put(717151707L, new XiaoFangZhou());
-        groupHandlerHashMap.put(1121098457L, new BeiShiCheDui());
-        groupHandlerHashMap.put(904280379L, new BingShuJu());
-        groupHandlerHashMap.put(541674751L, new DaShiTang());
-//        groupHandlerHashMap.put(573145769L, new GroupHandler(573145769L));
+        groupHandlerHashMap.put(1121098457L, new GroupHandler(1121098457L));
+        groupHandlerHashMap.put(904280379L, new GroupHandler(904280379L));
+        groupHandlerHashMap.put(541674751L, new GroupHandler(541674751L));
         groupHandlerHashMap.put(583880103L, new GroupHandler(583880103L));
         for (GroupMessageHandler handler : groupHandlerHashMap.values()) {
             try {
                 handler.onCreate();
             } catch (Exception e) {
-                e.printStackTrace();
+                Logger.logError(e);
             }
         }
     }
@@ -84,7 +98,7 @@ public class LingYueStart extends JavaPlugin {
             try {
                 handler.onDelete();
             } catch (Exception e) {
-                e.printStackTrace();
+                Logger.logError(e);
             }
         }
     }

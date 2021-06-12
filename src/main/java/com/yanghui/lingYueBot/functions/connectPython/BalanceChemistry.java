@@ -1,4 +1,4 @@
-package com.yanghui.lingYueBot.functions;
+package com.yanghui.lingYueBot.functions.connectPython;
 
 import java.io.BufferedReader;
 import java.io.IOException;

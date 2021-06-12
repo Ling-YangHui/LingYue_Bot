@@ -1,7 +1,7 @@
-package com.yanghui.lingYueBot.functions;
+package com.yanghui.lingYueBot.functions.javaBasedFunc;
 
 import com.yanghui.lingYueBot.core.coreDatabaseUtil.BaseDatabaseUtil;
-import com.yanghui.lingYueBot.template.GroupHandler;
+import com.yanghui.lingYueBot.handler.GroupHandler;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 
 import java.sql.PreparedStatement;

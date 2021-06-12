@@ -1,4 +1,4 @@
-package com.yanghui.lingYueBot.functions;
+package com.yanghui.lingYueBot.functions.javaBasedFunc;
 
 import com.alibaba.fastjson.JSONObject;
 import com.yanghui.lingYueBot.core.coreDatabaseUtil.BaseDatabaseUtil;

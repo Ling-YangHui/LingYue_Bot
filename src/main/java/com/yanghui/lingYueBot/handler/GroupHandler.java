@@ -1,16 +1,17 @@
-package com.yanghui.lingYueBot.template;
+package com.yanghui.lingYueBot.handler;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.yanghui.lingYueBot.core.codeInterpreter.conditionInterpreter.ConditionInterpreter;
 import com.yanghui.lingYueBot.core.codeInterpreter.operationInterpreter.OperationInterpreter;
 import com.yanghui.lingYueBot.core.coreDatabaseUtil.*;
-import com.yanghui.lingYueBot.core.coreTools.ExtractSingleMessage;
+import com.yanghui.lingYueBot.core.coreUtils.ExtractSingleMessage;
 import com.yanghui.lingYueBot.core.messageHandler.GroupMessageHandler;
-import com.yanghui.lingYueBot.functions.DailyReport;
-import com.yanghui.lingYueBot.functions.DriftBottle;
-import com.yanghui.lingYueBot.functions.GetSystemInfo;
-import com.yanghui.lingYueBot.functions.Repeat;
+import com.yanghui.lingYueBot.functions.javaBasedFunc.DailyReport;
+import com.yanghui.lingYueBot.functions.javaBasedFunc.DriftBottle;
+import com.yanghui.lingYueBot.functions.javaBasedFunc.GetSystemInfo;
+import com.yanghui.lingYueBot.functions.javaBasedFunc.Repeat;
+import com.yanghui.lingYueBot.utils.Logger;
 import net.mamoe.mirai.contact.User;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.Image;
@@ -75,7 +76,7 @@ public class GroupHandler extends GroupMessageHandler {
                         }
                     }
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    Logger.logError(e);
                 }
                 pastTime[0] = nowTime;
             }
@@ -100,7 +101,7 @@ public class GroupHandler extends GroupMessageHandler {
                 return;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            Logger.logError(e);
             return;
         }
         if (checkState("SuccessiveRepeat_Permission"))
@@ -146,6 +147,7 @@ public class GroupHandler extends GroupMessageHandler {
                         onLoad();
                         group.sendMessage("重置完毕");
                     } catch (Exception e) {
+                        Logger.logError(e);
                         group.sendMessage("呜~数据读取错误了呢");
                     }
                     break;
@@ -154,6 +156,7 @@ public class GroupHandler extends GroupMessageHandler {
                         onLoad();
                         group.sendMessage("回溯完毕");
                     } catch (Exception e) {
+                        Logger.logError(e);
                         group.sendMessage("呜~数据读取错误了呢");
                     }
                     break;
@@ -180,6 +183,7 @@ public class GroupHandler extends GroupMessageHandler {
                     try {
                         group.sendMessage("海里还有" + driftBottle.getBottleNum() + "个瓶子");
                     } catch (SQLException e) {
+                        Logger.logError(e);
                         group.sendMessage("数据库错误");
                     }
                     break;
@@ -205,6 +209,7 @@ public class GroupHandler extends GroupMessageHandler {
                     try {
                         DailyReport.dailyReport(this);
                     } catch (SQLException e) {
+                        Logger.logError(e);
                         group.sendMessage("读取报表出错");
                     }
                     break;
@@ -214,6 +219,7 @@ public class GroupHandler extends GroupMessageHandler {
                 try {
                     UserDatabaseUtil.setUserBoolean(Long.parseLong(list[2]), "isForbidden", true);
                 } catch (SQLException e) {
+                    Logger.logError(e);
                     group.sendMessage("设置失败");
                 }
             } else if (messageContent.contains("LingYue -unban")) {
@@ -221,6 +227,7 @@ public class GroupHandler extends GroupMessageHandler {
                 try {
                     UserDatabaseUtil.setUserBoolean(Long.parseLong(list[2]), "isForbidden", false);
                 } catch (SQLException e) {
+                    Logger.logError(e);
                     group.sendMessage("设置失败");
                 }
             }
@@ -231,7 +238,7 @@ public class GroupHandler extends GroupMessageHandler {
                     ResourceDatabaseUtil.inputResource(image, type);
                     group.sendMessage("写入成功");
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Logger.logError(e);
                     if (e.getClass().equals(SQLException.class)) {
                         group.sendMessage("数据库写入错误");
                     } else
@@ -246,6 +253,7 @@ public class GroupHandler extends GroupMessageHandler {
                     statement.close();
                     group.sendMessage("执行完毕");
                 } catch (SQLException e) {
+                    Logger.logError(e);
                     group.sendMessage("执行错误");
                 }
             }
@@ -263,6 +271,7 @@ public class GroupHandler extends GroupMessageHandler {
                 remove = driftBottle.removeBottle(messageContent.split(" ", 4)[3], event.getSender().getId());
                 group.sendMessage("---删除列表---\n" + remove);
             } catch (SQLException e) {
+                Logger.logError(e);
                 group.sendMessage("数据库错误，删除失败");
             }
         }

@@ -1,7 +1,8 @@
-package com.yanghui.lingYueBot.functions;
+package com.yanghui.lingYueBot.functions.javaBasedFunc;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.yanghui.lingYueBot.utils.Logger;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -36,7 +37,7 @@ public class GetSystemInfo {
             }
             return result;
         } catch (Exception e) {
-            System.out.println(e);
+            Logger.logError(e);
             e.printStackTrace();
         }
         return null;

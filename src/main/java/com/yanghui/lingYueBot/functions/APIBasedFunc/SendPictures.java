@@ -1,6 +1,7 @@
-package com.yanghui.lingYueBot.functions;
+package com.yanghui.lingYueBot.functions.APIBasedFunc;
 
 import com.yanghui.lingYueBot.core.coreDatabaseUtil.ResourceDatabaseUtil;
+import com.yanghui.lingYueBot.utils.Logger;
 import net.mamoe.mirai.contact.Contact;
 
 import java.io.File;
@@ -57,6 +58,7 @@ public class SendPictures {
                 inputStream = getImageFromURL(url[new Random().nextInt(url.length)]);
                 break;
             } catch (IOException e) {
+                Logger.logError(e);
                 if (count <= 0)
                     break;
             }

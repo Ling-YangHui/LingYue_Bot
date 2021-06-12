@@ -5,7 +5,14 @@ import com.alibaba.fastjson.JSONObject;
 import com.yanghui.lingYueBot.core.coreDatabaseUtil.OperationDatabaseUtil;
 import com.yanghui.lingYueBot.core.coreDatabaseUtil.ResourceDatabaseUtil;
 import com.yanghui.lingYueBot.core.coreDatabaseUtil.UserDatabaseUtil;
-import com.yanghui.lingYueBot.functions.*;
+import com.yanghui.lingYueBot.functions.APIBasedFunc.SendAIReply;
+import com.yanghui.lingYueBot.functions.APIBasedFunc.SendPictures;
+import com.yanghui.lingYueBot.functions.connectPython.BalanceChemistry;
+import com.yanghui.lingYueBot.functions.connectPython.SatelliteGetPosition;
+import com.yanghui.lingYueBot.functions.javaBasedFunc.ArknightsRandCard;
+import com.yanghui.lingYueBot.functions.javaBasedFunc.DriftBottle;
+import com.yanghui.lingYueBot.functions.javaBasedFunc.RandSeed;
+import com.yanghui.lingYueBot.utils.Logger;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.data.*;
@@ -100,7 +107,7 @@ public class OperationInterpreter {
                         String type = ResourceDatabaseUtil.getResource(Integer.parseInt(replyItem.substring(4).trim()), contact.getId());
                         SendPictures.sendPictures(type, contact, contact.getId());
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Logger.logError(e);
                     }
                 }
             }
@@ -115,7 +122,7 @@ public class OperationInterpreter {
         try {
             operationID = OperationDatabaseUtil.insertOperation(operation, event, groupID);
         } catch (SQLException e) {
-            e.printStackTrace();
+            Logger.logError(e);
             contact.sendMessage("数据库错误，指令执行失败");
             return;
         }
@@ -151,7 +158,7 @@ public class OperationInterpreter {
                     UserDatabaseUtil.setUserInt(event.getSender().getId(), "favor",
                             UserDatabaseUtil.getUserInt(event.getSender().getId(), "favor") + movingNum);
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    Logger.logError(e);
                 }
                 break;
 
@@ -163,7 +170,7 @@ public class OperationInterpreter {
                         try {
                             like = UserDatabaseUtil.getUserInt(event.getSender().getId(), "favor");
                         } catch (SQLException e) {
-                            e.printStackTrace();
+                            Logger.logError(e);
                             break;
                         }
                         response.add("，LingYue对你的好感度是" + like);
@@ -194,7 +201,7 @@ public class OperationInterpreter {
                             else if (instructionList[2].equals("Global"))
                                 driftBottle = DriftBottle.getDriftBottleAll(operationID, event);
                         } catch (SQLException e) {
-                            e.printStackTrace();
+                            Logger.logError(e);
                             contact.sendMessage("这片海里，什么都没有呢");
                             break;
                         }
@@ -211,7 +218,7 @@ public class OperationInterpreter {
                             hour = (timeSpace % (1000 * 3600 * 24)) / (1000 * 3600);
                             minute = (timeSpace % (1000 * 3600)) / (1000 * 60);
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            Logger.logError(e);
                             break;
                         }
                         response.add(new PlainText("你收到了一条" + (day > 0 ? (day + "天") : "") + hour + "小时" + minute + "分钟前的漂流瓶, 代号#" + driftBottle.getLong("bottleID") + "\n"));
@@ -233,7 +240,7 @@ public class OperationInterpreter {
                             try {
                                 ((DriftBottle) functionMap.get("DriftBottle")).addDriftBottle(driftBottle, operationID);
                             } catch (SQLException e) {
-                                e.printStackTrace();
+                                Logger.logError(e);
                                 contact.sendMessage("数据库错误，丢瓶子失败");
                             }
                         } else if (instructionList[2].equals("Global")) {
@@ -242,6 +249,7 @@ public class OperationInterpreter {
                                 try {
                                     DriftBottle.addDriftBottleALL(driftBottle, operationID);
                                 } catch (SQLException e) {
+                                    Logger.logError(e);
                                     contact.sendMessage("数据库错误，丢瓶子失败");
                                 }
                             }
@@ -263,7 +271,7 @@ public class OperationInterpreter {
                                     contact.sendMessage("你已经点赞过或者该瓶子id不存在");
                             }
                         } catch (SQLException e) {
-                            e.printStackTrace();
+                            Logger.logError(e);
                             contact.sendMessage("数据库错误，执行失败");
                         }
                 }
@@ -278,6 +286,7 @@ public class OperationInterpreter {
                         String result = BalanceChemistry.balanceChemistry(messageContent);
                         contact.sendMessage(result);
                     } catch (Exception e) {
+                        Logger.logError(e);
                         contact.sendMessage("出错了！");
                     }
                 }
@@ -334,6 +343,7 @@ public class OperationInterpreter {
                     String name = event.getMessage().contentToString().replace("@3598326822 卫星", "").trim();
                     response.add(new PlainText("\n" + SatelliteGetPosition.satelliteGetPosition(name)));
                 } catch (Exception e) {
+                    Logger.logError(e);
                     response.add(new PlainText("\n发生错误了"));
                 }
                 contact.sendMessage(response.asMessageChain());
@@ -346,6 +356,7 @@ public class OperationInterpreter {
                         try {
                             SendPictures.sendPicturesFromInternet(contact);
                         } catch (Exception e) {
+                            Logger.logError(e);
                             contact.sendMessage("图片下载错误");
                         }
                         break;
@@ -354,6 +365,7 @@ public class OperationInterpreter {
                             try {
                                 SendPictures.sendPicturesFromInternet(contact);
                             } catch (Exception e) {
+                                Logger.logError(e);
                                 contact.sendMessage("图片下载错误");
                             }
                         }
@@ -368,11 +380,20 @@ public class OperationInterpreter {
                     response.add(new At(event.getSender().getId()));
                     response.add(new PlainText(" " + RandSeed.randSeed()));
                 } catch (SQLException e) {
+                    Logger.logError(e);
                     contact.sendMessage("数据库错误");
                     return;
                 }
                 contact.sendMessage(response.asMessageChain());
                 break;
+
+            /*TODO: AI回复*/
+            case "AIReply":
+                response.add(new At((event.getSender().getId())));
+                response.add(" " + SendAIReply.getAnswer(event.getMessage().contentToString().replace("@3598326822 AI", "").trim()));
+                contact.sendMessage(response.asMessageChain());
+                break;
+
         }
         /* TODO: 我他妈的好想和
          *           草海龙做爱啊*/

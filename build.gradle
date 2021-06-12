@@ -4,6 +4,11 @@ plugins {
     id 'net.mamoe.mirai-console' version '2.6.1'
 }
 
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_14
+    targetCompatibility = JavaVersion.VERSION_14
+}
+
 group = 'LingDong'
 
 repositories {
@@ -15,7 +20,7 @@ def miraiCoreVersion = "2.6.1" // 2.0.0
 def miraiConsoleVersion = "2.6.1" // 2.0.0
 
 dependencies {
-    compileOnly 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+//    compileOnly 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
 //    compileOnly "net.mamoe:mirai-core:$miraiCoreVersion"
 //    compileOnly "net.mamoe:mirai-console:$miraiConsoleVersion"
 //    compileOnly "net.mamoe:mirai-console-terminal:$miraiConsoleVersion"

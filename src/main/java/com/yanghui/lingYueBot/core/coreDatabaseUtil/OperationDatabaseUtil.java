@@ -1,6 +1,6 @@
 package com.yanghui.lingYueBot.core.coreDatabaseUtil;
 
-import com.yanghui.lingYueBot.core.coreTools.ParseOperationCode;
+import com.yanghui.lingYueBot.core.coreUtils.ParseOperationCode;
 import net.mamoe.mirai.event.events.MessageEvent;
 
 import java.sql.PreparedStatement;
@@ -27,7 +27,7 @@ public class OperationDatabaseUtil extends BaseDatabaseUtil {
         long num = getOperationNum();
         statement.setLong(1, num + 1);
         statement.setLong(2, event.getSender().getId());
-        statement.setInt(3, ParseOperationCode.Companion.parseOperationCode(operation));
+        statement.setInt(3, ParseOperationCode.parseOperationCode(operation));
         statement.setTimestamp(4, new Timestamp(new Date().getTime()));
         statement.setLong(5, groupID);
         statement.executeUpdate();

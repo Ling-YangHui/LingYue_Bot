@@ -19,9 +19,10 @@ public class ReplyDatabaseUtil extends BaseDatabaseUtil {
     public static JSONArray getReply(long groupID) throws SQLException {
         JSONArray returnValue = new JSONArray();
         String sql = "SELECT * FROM Reply " +
-                "WHERE groupID = ? OR groupID = 0";
+                "WHERE (groupID = ? OR groupID = 0) AND (forbiddenGroupID != ?)";
         PreparedStatement statement = getStatement(sql);
         statement.setLong(1, groupID);
+        statement.setLong(2, groupID);
         ResultSet resultSet = statement.executeQuery();
         while (resultSet.next()) {
             JSONObject object = new JSONObject();
