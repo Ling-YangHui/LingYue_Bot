@@ -26,7 +26,10 @@ public class OperationDatabaseUtil extends BaseDatabaseUtil {
         PreparedStatement statement = getStatement(sql);
         long num = getOperationNum();
         statement.setLong(1, num + 1);
-        statement.setLong(2, event.getSender().getId());
+        if (event != null)
+            statement.setLong(2, event.getSender().getId());
+        else
+            statement.setLong(2, 0);
         statement.setInt(3, ParseOperationCode.parseOperationCode(operation));
         statement.setTimestamp(4, new Timestamp(new Date().getTime()));
         statement.setLong(5, groupID);

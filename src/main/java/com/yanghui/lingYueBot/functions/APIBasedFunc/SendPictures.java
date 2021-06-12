@@ -1,6 +1,5 @@
 package com.yanghui.lingYueBot.functions.APIBasedFunc;
 
-import com.yanghui.lingYueBot.core.coreDatabaseUtil.ResourceDatabaseUtil;
 import com.yanghui.lingYueBot.utils.Logger;
 import net.mamoe.mirai.contact.Contact;
 
@@ -9,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.sql.SQLException;
 import java.util.Random;
 
 public class SendPictures {
@@ -69,6 +67,12 @@ public class SendPictures {
         inputStream.close();
     }
 
+    public static void sendImageFromURL(Contact contact, String url) throws IOException {
+        InputStream inputStream = getImageFromURL(url);
+        Contact.Companion.sendImage(contact, inputStream, "jpg");
+        inputStream.close();
+    }
+
     /**
      * 从URL中获取一个输入流
      *
@@ -81,9 +85,5 @@ public class SendPictures {
         URLConnection connection = site.openConnection();
         connection.setConnectTimeout(5000);
         return connection.getInputStream();
-    }
-
-    public static void storeUpImage(InputStream inputStream) throws SQLException {
-        ResourceDatabaseUtil.inputResource(inputStream, (short) 2);
     }
 }

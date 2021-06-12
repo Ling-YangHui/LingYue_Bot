@@ -7,6 +7,7 @@ import com.yanghui.lingYueBot.core.coreDatabaseUtil.ResourceDatabaseUtil;
 import com.yanghui.lingYueBot.core.coreDatabaseUtil.UserDatabaseUtil;
 import com.yanghui.lingYueBot.functions.APIBasedFunc.SendAIReply;
 import com.yanghui.lingYueBot.functions.APIBasedFunc.SendPictures;
+import com.yanghui.lingYueBot.functions.APIBasedFunc.SendTodayMotto;
 import com.yanghui.lingYueBot.functions.connectPython.BalanceChemistry;
 import com.yanghui.lingYueBot.functions.connectPython.SatelliteGetPosition;
 import com.yanghui.lingYueBot.functions.javaBasedFunc.ArknightsRandCard;
@@ -38,6 +39,11 @@ public class OperationInterpreter {
         if (!conditionList.get(2).isEmpty()) {
             if (conditionList.get(2).equals("RAND")) {
                 executeReply(replyObject, reply.getString(new Random().nextInt(reply.size())), event, contact, FunctionMap);
+            } else if (conditionList.get(2).contains("RAND")) {
+                String range = conditionList.get(2).replace("RAND", "");
+                int from = Integer.parseInt(range.split(",")[0].trim());
+                int to = Integer.parseInt(range.split(",")[1].trim());
+                executeReply(replyObject, reply.getString(new Random().nextInt(to - from) + from), event, contact, FunctionMap);
             } else {
                 String[] replyStrList = conditionList.get(2).split(",");
                 for (String s : replyStrList) {
@@ -110,9 +116,23 @@ public class OperationInterpreter {
                         Logger.logError(e);
                     }
                 }
+                if (replyItem.startsWith("TASK_T:")) {
+                    executeOperationTimer(replyItem.substring(7), contact);
+                }
             }
             if (builder.size() != 0)
                 contact.sendMessage(builder.asMessageChain());
+        }
+    }
+
+    public static void executeOperationTimer(String operation, Contact contact) {
+        String[] instructionList = operation.split(" ");
+        MessageChainBuilder response = new MessageChainBuilder(128);
+        switch (instructionList[0]) {
+            case "Motto":
+                response.add(SendTodayMotto.getTodayMotto().getContent_cn());
+                contact.sendMessage(response.asMessageChain());
+                break;
         }
     }
 

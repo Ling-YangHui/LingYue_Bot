@@ -2,6 +2,7 @@ package com.yanghui.lingYueBot.core.codeInterpreter.conditionInterpreter;
 
 import com.yanghui.lingYueBot.annotations.PoweredByMirai;
 import com.yanghui.lingYueBot.core.coreDatabaseUtil.UserDatabaseUtil;
+import com.yanghui.lingYueBot.utils.Logger;
 import net.mamoe.mirai.event.events.MessageEvent;
 
 import java.sql.SQLException;
@@ -119,6 +120,8 @@ class InputBuffer {
                 } while (c != ')');
                 stringCache = stringCacheBuilder.substring(1, stringCacheBuilder.length() - 1);
                 value = messageContent.equals(stringCache);
+                Logger.logDebug(messageContent);
+                Logger.logDebug(stringCache);
                 break;
             case "likeLessThan":
                 stringCacheBuilder = new StringBuilder();
