@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.yanghui.lingYueBot.core.coreDatabaseUtil.OperationDatabaseUtil;
 import com.yanghui.lingYueBot.core.coreDatabaseUtil.ResourceDatabaseUtil;
 import com.yanghui.lingYueBot.core.coreDatabaseUtil.UserDatabaseUtil;
+import com.yanghui.lingYueBot.core.coreUtils.ParseOperationCode;
 import com.yanghui.lingYueBot.functions.APIBasedFunc.SendAIReply;
 import com.yanghui.lingYueBot.functions.APIBasedFunc.SendPictures;
 import com.yanghui.lingYueBot.functions.APIBasedFunc.SendTodayMotto;
@@ -146,6 +147,7 @@ public class OperationInterpreter {
             contact.sendMessage("数据库错误，指令执行失败");
             return;
         }
+        Logger.logDebug("bot执行事件", String.format("指令代码: %s\n操作码: %d\n指令序号: %d", operation, ParseOperationCode.parseOperationCode(operation), operationID));
 
         String[] instructionList = operation.split(" ");
         MessageChainBuilder response = new MessageChainBuilder(128);
