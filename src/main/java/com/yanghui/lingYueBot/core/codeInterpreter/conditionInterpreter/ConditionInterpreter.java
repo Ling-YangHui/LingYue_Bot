@@ -32,15 +32,15 @@ public class ConditionInterpreter {
 
 
     public static boolean getSelfConditionSatisfied(String condition, MessageEvent event, HashMap<String, Object> botStatus) {
-        Stack<Node.Sign> signStack = new Stack<>();
+        Stack<InputBuffer.Node.Sign> signStack = new Stack<>();
         Stack<Boolean> valueStack = new Stack<>();
         InputBuffer buffer = new InputBuffer(condition);
-        Node node;
-        Node.Sign s;
+        InputBuffer.Node node;
+        InputBuffer.Node.Sign s;
         do {
             s = null;
             node = buffer.getNode(event, botStatus);
-            if (node.type == Node.NodeType.VALUE)
+            if (node.type == InputBuffer.Node.NodeType.VALUE)
                 valueStack.push(node.value);
             else {
                 try {
@@ -48,10 +48,10 @@ public class ConditionInterpreter {
                         if (signStack.isEmpty())
                             break;
                         s = signStack.pop();
-                        if (node.type == Node.NodeType.SIGN && node.sign == Node.Sign.END)
+                        if (node.type == InputBuffer.Node.NodeType.SIGN && node.sign == InputBuffer.Node.Sign.END)
                             break;
-                        if (node.sign != Node.Sign.RIGHT) {
-                            while (Node.Sign.getPriority(s) > Node.Sign.getPriority(node.sign) && s != Node.Sign.LEFT) {
+                        if (node.sign != InputBuffer.Node.Sign.RIGHT) {
+                            while (InputBuffer.Node.Sign.getPriority(s) > InputBuffer.Node.Sign.getPriority(node.sign) && s != InputBuffer.Node.Sign.LEFT) {
                                 valueStack.push(calculate(s, valueStack));
                                 if (signStack.isEmpty()) {
                                     s = null;
@@ -60,7 +60,7 @@ public class ConditionInterpreter {
                                 s = signStack.pop();
                             }
                         } else {
-                            while (s != Node.Sign.LEFT) {
+                            while (s != InputBuffer.Node.Sign.LEFT) {
                                 valueStack.push(calculate(s, valueStack));
                                 if (signStack.isEmpty()) {
                                     s = null;
@@ -69,26 +69,26 @@ public class ConditionInterpreter {
                                 s = signStack.pop();
                             }
                         }
-                    } while (Node.Sign.getPriority(node.sign) < Node.Sign.getPriority(s) && s != Node.Sign.LEFT);
+                    } while (InputBuffer.Node.Sign.getPriority(node.sign) < InputBuffer.Node.Sign.getPriority(s) && s != InputBuffer.Node.Sign.LEFT);
                 } catch (EmptyStackException ignore) {
                 }
-                if (node.sign != Node.Sign.RIGHT) {
+                if (node.sign != InputBuffer.Node.Sign.RIGHT) {
                     if (s != null) {
                         signStack.push(s);
                     }
-                    if (node.sign != Node.Sign.END) {
+                    if (node.sign != InputBuffer.Node.Sign.END) {
                         signStack.push(node.sign);
                     }
                 }
             }
-        } while (!(node.type == Node.NodeType.SIGN && node.sign == Node.Sign.END));
+        } while (!(node.type == InputBuffer.Node.NodeType.SIGN && node.sign == InputBuffer.Node.Sign.END));
         while (!signStack.isEmpty()) {
             valueStack.push(calculate(signStack.pop(), valueStack));
         }
         return valueStack.pop();
     }
 
-    private static boolean calculate(Node.Sign sign, Stack<Boolean> valueStack) {
+    private static boolean calculate(InputBuffer.Node.Sign sign, Stack<Boolean> valueStack) {
         switch (sign) {
             case AND:
                 return valueStack.pop() & valueStack.pop();

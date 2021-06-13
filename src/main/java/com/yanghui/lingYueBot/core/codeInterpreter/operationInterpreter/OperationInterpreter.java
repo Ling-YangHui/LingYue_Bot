@@ -130,51 +130,47 @@ public class OperationInterpreter {
         String[] instructionList = operation.split(" ");
         MessageChainBuilder response = new MessageChainBuilder(128);
         switch (instructionList[0]) {
-            case "Motto":
+            case "Motto" -> {
+                response.add(SendTodayMotto.getTodayMotto().getContent_en() + "\n");
                 response.add(SendTodayMotto.getTodayMotto().getContent_cn());
                 contact.sendMessage(response.asMessageChain());
-                break;
+            }
         }
     }
 
     public static void executeOperation(String operation, MessageEvent event, Contact contact, HashMap<String, Object> functionMap, long groupID) {
 
+        String[] instructionList;
+        MessageChainBuilder response;
         long operationID;
-        try {
-            operationID = OperationDatabaseUtil.insertOperation(operation, event, groupID);
-        } catch (SQLException e) {
-            Logger.logError(e);
-            contact.sendMessage("数据库错误，指令执行失败");
-            return;
+        {
+
+            // 注入事件记录
+            try {
+                operationID = OperationDatabaseUtil.insertOperation(operation, event, groupID);
+            } catch (SQLException e) {
+                Logger.logError(e);
+                contact.sendMessage("数据库错误，指令执行失败");
+                return;
+            }
+            Logger.logDebug("bot执行事件", String.format("指令代码: %s\n操作码: %d\n指令序号: %d", operation, ParseOperationCode.parseOperationCode(operation), operationID));
+
+            instructionList = operation.split(" ");
+            response = new MessageChainBuilder(128);
         }
-        Logger.logDebug("bot执行事件", String.format("指令代码: %s\n操作码: %d\n指令序号: %d", operation, ParseOperationCode.parseOperationCode(operation), operationID));
-
-        String[] instructionList = operation.split(" ");
-        MessageChainBuilder response = new MessageChainBuilder(128);
-
         switch (instructionList[0]) {
             /* TODO: 好感变化*/
-            case "Like":
+            case "Like" -> {
                 // 表示好感度变化
-                int movingLimit = 5;
-                switch (instructionList[2]) {
-                    case "-Small":
-                        movingLimit = 5;
-                        break;
-                    case "-Mid":
-                        movingLimit = 10;
-                        break;
-                    case "-Large":
-                        movingLimit = 15;
-                        break;
-                }
+                int movingLimit = switch (instructionList[2]) {
+                    case "-Mid" -> 10;
+                    case "-Large" -> 15;
+                    default -> 5;
+                };
                 int movingNum = new Random().nextInt(movingLimit);
                 switch (instructionList[1]) {
-                    case "-Float":
-                        movingNum -= movingLimit / 2;
-                        break;
-                    case "-Decline":
-                        movingNum *= -1;
+                    case "-Float" -> movingNum -= movingLimit / 2;
+                    case "-Decline" -> movingNum *= -1;
                 }
                 try {
                     UserDatabaseUtil.setUserInt(event.getSender().getId(), "favor",
@@ -182,12 +178,12 @@ public class OperationInterpreter {
                 } catch (SQLException e) {
                     Logger.logError(e);
                 }
-                break;
+            }
 
             /* TODO: 获取数值 */
-            case "Get":
+            case "Get" -> {
                 switch (instructionList[1]) {
-                    case "-Like":
+                    case "-Like" -> {
                         int like;
                         try {
                             like = UserDatabaseUtil.getUserInt(event.getSender().getId(), "favor");
@@ -208,14 +204,16 @@ public class OperationInterpreter {
                             response.add("，LingYue最……最喜欢你了~");
                         }
                         contact.sendMessage(response.asMessageChain());
-                        break;
+                    }
+                    case "-Balance" -> {
+                    }
                 }
-                break;
+            }
 
             /* TODO: 漂流瓶 */
-            case "DriftBottle":
+            case "DriftBottle" -> {
                 switch (instructionList[1]) {
-                    case "-GET":
+                    case "-GET" -> {
                         JSONObject driftBottle = null;
                         try {
                             if (instructionList[2].equals("Local"))
@@ -247,9 +245,9 @@ public class OperationInterpreter {
                         response.add(new At(event.getSender().getId()));
                         response.add(new PlainText(" " + driftBottle.getString("message")));
                         contact.sendMessage(response.asMessageChain());
-                        break;
-                    case "-ADD":
-                        driftBottle = new JSONObject();
+                    }
+                    case "-ADD" -> {
+                        JSONObject driftBottle = new JSONObject();
                         driftBottle.put("sender", event.getSender().getNick());
                         driftBottle.put("senderID", event.getSender().getId());
                         if (event.getMessage().contentToString().length() > 180) {
@@ -276,8 +274,8 @@ public class OperationInterpreter {
                                 }
                             }
                         }
-                        break;
-                    case "-Like":
+                    }
+                    case "-Like" -> {
                         try {
                             String messageContent = event.getMessage().contentToString().replace("@3598326822 好瓶子", "").replace(" ", "");
                             if (messageContent.isEmpty()) {
@@ -296,11 +294,12 @@ public class OperationInterpreter {
                             Logger.logError(e);
                             contact.sendMessage("数据库错误，执行失败");
                         }
+                    }
                 }
-                break;
+            }
 
             /* TODO: 化学式配平 */
-            case "Balance": {
+            case "Balance" -> {
                 String messageContent = event.getMessage().contentToString();
                 messageContent = messageContent.replace("@3598326822 配平 ", "");
                 if (!messageContent.isEmpty()) {
@@ -312,11 +311,10 @@ public class OperationInterpreter {
                         contact.sendMessage("出错了！");
                     }
                 }
-                break;
             }
 
             /* TODO: 抽卡 */
-            case "RandCard": {
+            case "RandCard" -> {
                 String messageContent = event.getMessage().contentToString();
                 messageContent = messageContent.replace("@3598326822 抽卡 ", "");
                 int randNum;
@@ -355,11 +353,10 @@ public class OperationInterpreter {
                     response.add("发生错误了，请检查格式或者抽卡数量");
                     contact.sendMessage(response.asMessageChain());
                 }
-                break;
             }
 
             /* TODO: 卫星测控 */
-            case "Satellite":
+            case "Satellite" -> {
                 response.add(new At(event.getSender().getId()));
                 try {
                     String name = event.getMessage().contentToString().replace("@3598326822 卫星", "").trim();
@@ -369,20 +366,20 @@ public class OperationInterpreter {
                     response.add(new PlainText("\n发生错误了"));
                 }
                 contact.sendMessage(response.asMessageChain());
-                break;
+            }
 
             /* TODO: 高雅艺术 */
-            case "MoePic":
+            case "MoePic" -> {
                 switch (instructionList[1]) {
-                    case "-GET":
+                    case "-GET" -> {
                         try {
                             SendPictures.sendPicturesFromInternet(contact);
                         } catch (Exception e) {
                             Logger.logError(e);
                             contact.sendMessage("图片下载错误");
                         }
-                        break;
-                    case "-GET-MORE":
+                    }
+                    case "-GET-MORE" -> {
                         for (int i = 0; i < 3; i++) {
                             try {
                                 SendPictures.sendPicturesFromInternet(contact);
@@ -391,13 +388,12 @@ public class OperationInterpreter {
                                 contact.sendMessage("图片下载错误");
                             }
                         }
-                        break;
+                    }
                 }
-                break;
-
+            }
 
             /* TODO: 获取种子 */
-            case "RandSeed":
+            case "RandSeed" -> {
                 try {
                     response.add(new At(event.getSender().getId()));
                     response.add(new PlainText(" " + RandSeed.randSeed()));
@@ -407,14 +403,14 @@ public class OperationInterpreter {
                     return;
                 }
                 contact.sendMessage(response.asMessageChain());
-                break;
+            }
 
             /*TODO: AI回复*/
-            case "AIReply":
+            case "AIReply" -> {
                 response.add(new At((event.getSender().getId())));
                 response.add(" " + SendAIReply.getAnswer(event.getMessage().contentToString().replace("@3598326822 AI", "").trim()));
                 contact.sendMessage(response.asMessageChain());
-                break;
+            }
 
         }
         /* TODO: 我他妈的好想和
